@@ -56,3 +56,15 @@ ehthumbs.db
 # yarn.lock
 # pnpm-lock.yaml
 # bun.lockb
+
+# uv
+uv.lock
+
+# SQLite databases
+*.db
+*.sqlite
+*.sqlite3
+
+# pytest
+.pytest_cache/
+*.egg-info/

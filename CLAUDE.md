@@ -3,15 +3,24 @@
 
 ## Project Overview
 
-<!-- TODO: Replace this section with your project's overview after scaffolding -->
-
-**Project Name:** [Your Project Name]
-**Description:** [Brief description of what this project does]
-**Tech Stack:** [Language, framework, key libraries — update after running a scaffold command]
+**Project Name:** todo-cli
+**Description:** A Python CLI task scheduling app for terminal-native users. Supports CRUD on tasks, list/status views, and time-to-complete tracking.
+**Tech Stack:** Python 3.12+, Click (CLI framework), SQLite (local storage), pytest, uv (build tooling)
 
 **Codebase map:** `docs/code-map.md` — read this first to understand the package structure, public APIs, and data flow.
 
-> **Note:** Several paths referenced below (e.g., `docs/code-map.md`, `docs/tech-debt.md`, `docs/test-strategy.md`) live under `docs/scaffolds/` until you run a scaffold command, which moves them to their final locations.
+## Dev Commands
+
+```bash
+uv sync --dev          # install all dependencies (creates .venv)
+uv run pytest          # run tests
+uv run todo --help     # run the CLI
+uv build               # build a wheel
+```
+
+**Entry point:** `src/todo_cli/cli.py` → `todo_cli.cli:cli`
+**Subcommands:** `src/todo_cli/commands/tasks.py`
+**Tests:** `tests/test_cli.py` (use Click's `CliRunner`, not subprocess)
 
 ## First-Run Detection
 
