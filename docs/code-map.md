@@ -2,70 +2,79 @@
 agent-notes:
   ctx: "codebase structural overview for humans and agents"
   deps: []
-  state: stub
-  last: "coordinator@2026-02-15"
-  key: ["UPDATE when adding packages, modules, or changing public APIs"]
+  state: active
+  last: "sato@2026-05-24"
 ---
 # Code Map
 
-Structural overview of the codebase. Use this to orient yourself before diving into code. **Keep this up to date** — when you add a package, module, or significantly change a public API, update this file.
-
-Read this file at the start of every session instead of exploring the codebase from scratch.
+Read this at the start of every session to orient before touching code.
 
 ## Architecture at a Glance
 
-<!-- Add an ASCII diagram showing data flow and high-level component relationships -->
-<!-- Example:
 ```
-Input → Processing → Output
-  │         │          │
-  └── storage ─────────┘
+CLI (cli.py)
+  │  Click commands, output rendering, exit codes
+  │  depends on ↓
+Service (service.py)  ← NOT YET BUILT (M3)
+  │  Pure business logic, validation, status transitions
+  │  depends on ↓
+Storage (storage/)
+  │  Abstract interface + JSON and SQLite backends
+  └── json_store.py  ← NOT YET BUILT (M2)
+  └── sqlite_store.py  ← NOT YET BUILT (M2)
+
+Models (models.py)  ← used by all three layers
+Exceptions (exceptions.py)  ← used by all three layers
 ```
--->
 
-## Dependency Graph
+## Package Summary
 
-<!-- Show which packages/modules depend on which -->
-<!-- Example:
-```
-core ────── (no deps — foundational types)
-  ├── api ─── (HTTP layer)
-  ├── db ──── (data access)
-  └── cli ─── (depends on all packages)
-```
--->
+### `src/todo_cli/`
 
-## Package / Module Summaries
+| Module | Status | Purpose |
+|--------|--------|---------|
+| `cli.py` | Stub | Click entry point. All 5 commands defined but print placeholder output — not wired to service layer yet. |
+| `models.py` | Done | `Task` dataclass + `Status` enum. `is_overdue` property. |
+| `exceptions.py` | Done | 6 domain exceptions: `ValidationError`, `InvalidDateError`, `TaskNotFoundError`, `StorageCorruptError`, `StorageAccessError`. |
+| `service.py` | Not started | Pure business logic (M3). |
+| `storage/base.py` | Done | Abstract `StorageBackend` interface: `add`, `get`, `list`, `update`, `delete`. |
+| `storage/json_store.py` | Not started | JSON backend — next up (M2). |
+| `storage/sqlite_store.py` | Not started | SQLite backend (M2, after JSON). |
 
-<!-- For each package or major module, document:
-### @scope/package-name — Short Description
+## CLI Commands (top-level, all stubbed)
 
-**Purpose:** What it does.
+| Command | Syntax | Status |
+|---------|--------|--------|
+| add | `todo add "<desc>" [--due YYYY-MM-DD]` | Stub |
+| list | `todo list [--status pending\|completed\|all]` | Stub |
+| complete | `todo complete <id>` | Stub |
+| delete | `todo delete <id> [--force]` | Stub |
+| show | `todo show <id>` | Stub |
 
-| Module | Key Exports | Notes |
-|--------|------------|-------|
-| `src/foo.ts` | `FooClass`, `fooHelper()` | Entry point |
-| `src/bar.ts` | `BarSchema`, `BarType` | Zod schemas |
+## Task Model Fields
 
-**External deps:** list key dependencies
-**Internal deps:** list workspace dependencies
--->
+`id` · `description` · `due_date` · `status` · `created_at` · `completed_at`
+No `duration` field — dropped from PRD.
 
 ## Test Inventory
 
-<!-- List test files, counts, and focus areas -->
-<!-- Example:
-| Package | Test Files | Tests | Focus |
-|---------|-----------|-------|-------|
-| core | 3 | 24 | Schema validation, config loading |
-| api | 5 | 41 | Route handlers, middleware |
--->
+| File | Tests | Focus |
+|------|-------|-------|
+| `tests/test_cli.py` | 8 | CLI smoke tests — happy path per command |
+| `tests/test_storage.py` | Not created yet | JSON + SQLite backends (M2) |
+| `tests/test_service.py` | Not created yet | Service layer logic (M3) |
 
-## Key Type Flow
+## Storage Path (runtime)
 
-<!-- Document how data flows through the system's type hierarchy -->
-<!-- Example: RawInput → ValidatedInput → ProcessedResult → OutputFormat -->
+- JSON default: `~/.todo/tasks.json`
+- SQLite opt-in: `~/.todo/tasks.db` (set `TODO_BACKEND=sqlite`)
+- Override: set `TODO_DATA_PATH` env var to point at any directory
 
-## Config Structure
+## Key External Dependencies
 
-<!-- Document config files, environment variables, and their relationships -->
+| Package | Purpose |
+|---------|---------|
+| `click>=8.1` | CLI framework |
+| `rich>=13.0` | Table rendering, overdue highlighting |
+| `pytest + pytest-cov` | Test runner + coverage |
+| `uv` | Build and package management |

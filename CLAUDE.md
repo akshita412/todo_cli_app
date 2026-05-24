@@ -19,7 +19,6 @@ uv build               # build a wheel
 ```
 
 **Entry point:** `src/todo_cli/cli.py` → `todo_cli.cli:cli`
-**Subcommands:** `src/todo_cli/commands/tasks.py`
 **Tests:** `tests/test_cli.py` (use Click's `CliRunner`, not subprocess)
 
 ## First-Run Detection
