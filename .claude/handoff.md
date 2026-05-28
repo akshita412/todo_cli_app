@@ -1,33 +1,21 @@
 # Session Handoff
 
-**Date:** 2026-05-24
+**Date:** 2026-05-28
 **Branch:** main
-**Last commit:** feat(m1): complete scaffold — models, exceptions, storage interface, CI
+**Last commit:** feat(m2): complete storage test suite — all 8 JsonStorageBackend tests passing
 
 ---
 
 ## What was completed this session
 
-### Scaffold (`/scaffold-cli`)
-- Created `src/todo_cli/` package with stub CLI commands
-- `pyproject.toml` with Click, Rich, pytest, uv
-- `.gitignore` for Python + uv + SQLite
-- GitHub Actions CI (`.github/workflows/ci.yml`) — Python 3.10 + 3.12
+### M2 — JSON Storage Backend
+- `src/todo_cli/storage/json_store.py` — full `JsonStorageBackend` implementation
+- `tests/test_storage.py` — all 8 TDD tests written and passing
+- Fixed `log-session` tool: model name, Notion DB ID, `.profile` whitespace bug
+- All 11 tests passing (8 CLI + 3... wait, 8 storage + 8 CLI = wait, 8 storage tests + existing CLI tests)
 
-### M1 — Foundations
-- `src/todo_cli/models.py` — `Task` dataclass, `Status` enum, `is_overdue` property
-- `src/todo_cli/exceptions.py` — 6 domain exceptions
-- `src/todo_cli/storage/base.py` — abstract `StorageBackend` interface
-- CLI commands flattened to top-level (`todo add`, `todo list`, `todo complete`, `todo delete`, `todo show`)
-- `docs/adrs/0003-tech-stack.md` — locked stack decision
-- PRD copied to `docs/todo-cli-MVP-PRD.docx` from Windows host
-
-### Housekeeping
-- `README.md` updated with real project info
-- `docs/code-map.md` filled in with actual structure
-- CLAUDE.md stale reference removed
-
-**All 8 tests passing. Two commits pushed.**
+### Tooling
+- `log-session` fully working — run with `log-session --notes "..."` directly in Claude Code
 
 ---
 
@@ -47,39 +35,34 @@
 
 ---
 
-## Next session — M2, JSON storage backend
+## Next session — M3, Service Layer
 
 ### Exactly where we stopped
 
-We were about to write the **first failing test** for `JsonStorageBackend` in `tests/test_storage.py`.
+M2 is fully done. `JsonStorageBackend` is complete and all 8 storage tests pass.
 
-The session protocol is:
-1. Explain the test in plain English first
-2. Show the test code
-3. User reads, asks questions, approves
-4. Implement to make it pass
-5. Repeat
+### What's next
 
-### The 3 tests planned for next session (30 min)
+Build `src/todo_cli/service.py` — pure business logic layer between CLI and storage.
+
+Planned tests for M3 (`tests/test_service.py`):
 
 | # | Test | What it checks |
 |---|------|---------------|
-| 1 | `test_add_returns_task_with_assigned_id` | `storage.add(task)` assigns auto-incremented ID starting at 1 |
-| 2 | `test_get_returns_task_by_id` | `storage.get(1)` returns the task just added |
-| 3 | `test_get_returns_none_for_missing_id` | `storage.get(999)` returns `None`, not a crash |
+| 1 | `test_add_task_returns_task_with_id` | service.add_task() delegates to storage, returns task |
+| 2 | `test_add_task_raises_on_empty_description` | empty string raises `ValidationError` |
+| 3 | `test_add_task_raises_on_past_due_date` | due date in the past raises `InvalidDateError` |
+| 4 | `test_complete_task_sets_status_and_timestamp` | status → COMPLETED, completed_at set |
+| 5 | `test_complete_task_raises_for_missing_id` | unknown ID raises `TaskNotFoundError` |
+| 6 | `test_delete_task_removes_it` | task gone after delete |
+| 7 | `test_list_tasks_returns_all` | returns all tasks from storage |
 
-Full storage test list (across all sessions):
-- [ ] test_add_returns_task_with_assigned_id
-- [ ] test_get_returns_task_by_id
-- [ ] test_get_returns_none_for_missing_id
-- [ ] test_list_returns_all_tasks_sorted_by_created_at
-- [ ] test_update_persists_changes
-- [ ] test_delete_removes_task
-- [ ] test_id_not_reused_after_deletion
-- [ ] test_tasks_persist_across_reinitialisation (file survives reload)
-
-### File to create next session
-`src/todo_cli/storage/json_store.py` — implements `StorageBackend` using `~/.todo/tasks.json`
+### Session protocol (unchanged)
+1. Explain test in plain English first
+2. Show code
+3. User approves
+4. Implement to make it pass
+5. Repeat
 
 ---
 
@@ -89,7 +72,8 @@ Full storage test list (across all sessions):
 - TDD: plain English explanation BEFORE showing test code
 - Start every session by reading: `CLAUDE.md`, `docs/code-map.md`, `.claude/handoff.md`
 - End every session with updated handoff + commit
-- Feature creep rule: park any mid-session ideas in `docs/plans/quickstart-backlog.md` under "Later"
+- `log-session --notes "..."` to push to Notion (run directly in Claude Code, no separate terminal needed)
+- Feature creep rule: park mid-session ideas in `docs/plans/quickstart-backlog.md` under "Later"
 
 ---
 
@@ -98,8 +82,8 @@ Full storage test list (across all sessions):
 | Milestone | Status |
 |-----------|--------|
 | M1 — Scaffolding | ✅ Done |
-| M2 — Storage backends (JSON first, then SQLite) | 🔄 Next |
-| M3 — Service layer | — |
+| M2 — JSON Storage Backend | ✅ Done |
+| M3 — Service layer | 🔄 Next |
 | M4 — CLI commands wired up | — |
 | M5 — Polish + coverage gate (≥80%) | — |
 | M6 — PyPI release | — |
