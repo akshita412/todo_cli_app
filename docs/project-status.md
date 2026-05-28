@@ -57,6 +57,11 @@ Each layer is independent. You can swap the storage backend (JSON → SQLite) wi
 
 **Test count: 16 tests, all passing.**
 
+## Tooling set up
+- `log-session` — logs each session summary to Notion automatically (`log-session --notes "..."`)
+- `gh` CLI — installed and authenticated, manages the GitHub Projects board
+- GitHub Projects board — synced with milestone progress (github.com/akshita412/todo_cli_app → Projects → Todo CLI)
+
 ---
 
 ## What's left

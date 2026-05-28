@@ -16,6 +16,8 @@
 
 ### Tooling
 - `log-session` fully working — run with `log-session --notes "..."` directly in Claude Code
+- `gh` CLI installed and authenticated — can manage GitHub Projects board directly from Claude Code
+- GitHub Projects board cleaned up — all stale vteam-hybrid items removed, 6 milestone items added with correct statuses
 
 ---
 
