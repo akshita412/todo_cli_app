@@ -34,6 +34,8 @@ class TaskService:
         return self._storage.update(task)
 
     def delete_task(self, task_id: int) -> None:
+        if self._storage.get(task_id) is None:
+            raise TaskNotFoundError(f"No task with id {task_id}.")
         self._storage.delete(task_id)
 
     def list_tasks(self) -> List[Task]:

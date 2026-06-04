@@ -61,6 +61,8 @@ Add directives when:
 
 ## DevOps & Infrastructure (Ines)
 
+- **PR over direct push to `main`.** Every work item lands via a feature branch + pull request, never a direct push to `main`. _Why:_ the template's "CI must pass before merge" directive only holds if changes go through a PR where CI runs; PRs also give a review surface and an audit trail. Human-stated preference, 2026-06-04.
+
 <!-- Ines: add infra conventions here.
      Examples: "CI must pass before merge, no exceptions",
      "Docker images use distroless base",
