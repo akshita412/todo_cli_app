@@ -1,23 +1,51 @@
 # Session Handoff
 
-**Date:** 2026-05-28
-**Branch:** main
-**Last commit:** feat(m2): complete storage test suite — all 8 JsonStorageBackend tests passing
+**Date:** 2026-06-04
+**Branch:** chore/post-m3-cleanup (off main @ fffb7e0)
+**Last merged work:** PR #1 — feat(m3): service layer (MERGED into main)
 
 ---
 
 ## What was completed this session
 
-### M2 — JSON Storage Backend
-- `src/todo_cli/storage/json_store.py` — full `JsonStorageBackend` implementation
-- `tests/test_storage.py` — all 8 TDD tests written and passing
-- Fixed `log-session` tool: model name, Notion DB ID, `.profile` whitespace bug
-- All 11 tests passing (8 CLI + 3... wait, 8 storage + 8 CLI = wait, 8 storage tests + existing CLI tests)
+### M3 — Service layer (DONE + MERGED)
+- `src/todo_cli/service.py` — `TaskService` with `add_task`, `complete_task`, `delete_task`, `list_tasks`
+- Validation: empty desc → `ValidationError`, past due → `InvalidDateError`, unknown id → `TaskNotFoundError`
+- `tests/test_service.py` — 13 TDD tests, all green
+- **PR #1 merged into `main`** (`fffb7e0`). Local `main` fast-forwarded; feature branch deleted.
 
-### Tooling
-- `log-session` fully working — run with `log-session --notes "..."` directly in Claude Code
-- `gh` CLI installed and authenticated — can manage GitHub Projects board directly from Claude Code
-- GitHub Projects board cleaned up — all stale vteam-hybrid items removed, 6 milestone items added with correct statuses
+### Post-M3 cleanup (this branch — not yet committed)
+- Killed the `datetime.utcnow()` deprecation: now timezone-aware `datetime.now(timezone.utc)` in `models.py`, `service.py`, and `tests/test_service.py`
+- Full suite: **29 passing, 0 warnings** (was 29 passing / 24 deprecation warnings)
+- Notion journal: removed duplicate M3 entry (one canonical entry remains)
+- `log-session` tool refactored to push-only (no Anthropic API; runs on Pro via `NOTION_TOKEN`)
+
+---
+
+## Current state
+
+| Layer | Status |
+|-------|--------|
+| Models + Exceptions | ✅ Done |
+| Storage (JSON backend) | ✅ Done |
+| Service layer | ✅ Done + merged |
+| **CLI ↔ service wiring** | ❌ Stubbed — this is M4 |
+
+CLI commands (`add`, `list`, `complete`, `delete`, `show`) still print placeholders and are NOT connected to `TaskService`.
+
+---
+
+## Next session — M4, Wire CLI to the service layer
+
+Connect each Click command in `src/todo_cli/cli.py` to `TaskService`:
+- Construct the storage backend (JSON default, SQLite via `TODO_BACKEND=sqlite`) and wrap in `TaskService`
+- `add` → `add_task`; `list` → `list_tasks` (Rich table, overdue highlight); `complete` → `complete_task`; `delete` → `delete_task` (respect `--force`); `show` → fetch one
+- Map domain exceptions to friendly CLI errors + non-zero exit codes
+- TDD: extend `tests/test_cli.py` (Click `CliRunner`), tests first
+
+### Open housekeeping before/at start of M4
+- **Commit this cleanup branch** (`chore/post-m3-cleanup`) or fold it into the first M4 commit — currently uncommitted.
+- Move the M4 board item to **In Progress** before coding.
 
 ---
 
@@ -33,48 +61,17 @@
 | CLI commands | Top-level, no subgroups |
 | CI | GitHub Actions, Python 3.10 + 3.12 |
 | PyPI publish | Real goal — M6 |
-| PRD source of truth | `docs/todo-cli-MVP-PRD.docx` |
-
----
-
-## Next session — M3, Service Layer
-
-### Exactly where we stopped
-
-M2 is fully done. `JsonStorageBackend` is complete and all 8 storage tests pass.
-
-### What's next
-
-Build `src/todo_cli/service.py` — pure business logic layer between CLI and storage.
-
-Planned tests for M3 (`tests/test_service.py`):
-
-| # | Test | What it checks |
-|---|------|---------------|
-| 1 | `test_add_task_returns_task_with_id` | service.add_task() delegates to storage, returns task |
-| 2 | `test_add_task_raises_on_empty_description` | empty string raises `ValidationError` |
-| 3 | `test_add_task_raises_on_past_due_date` | due date in the past raises `InvalidDateError` |
-| 4 | `test_complete_task_sets_status_and_timestamp` | status → COMPLETED, completed_at set |
-| 5 | `test_complete_task_raises_for_missing_id` | unknown ID raises `TaskNotFoundError` |
-| 6 | `test_delete_task_removes_it` | task gone after delete |
-| 7 | `test_list_tasks_returns_all` | returns all tasks from storage |
-
-### Session protocol (unchanged)
-1. Explain test in plain English first
-2. Show code
-3. User approves
-4. Implement to make it pass
-5. Repeat
+| PRD source of truth | `docs/todo-cli-MVP-PRD.md` |
 
 ---
 
 ## Session preferences (user)
 
-- 30 minutes per session (may increase over time)
-- TDD: plain English explanation BEFORE showing test code
-- Start every session by reading: `CLAUDE.md`, `docs/code-map.md`, `.claude/handoff.md`
-- End every session with updated handoff + commit
-- `log-session --notes "..."` to push to Notion (run directly in Claude Code, no separate terminal needed)
+- 30 minutes per session (may grow over time)
+- TDD: plain-English explanation of each test BEFORE showing code; user approves before green
+- Start every session: read `CLAUDE.md`, `docs/code-map.md`, `.claude/handoff.md`
+- End every session: update this handoff + commit
+- Log sessions to Notion: just ask Claude — it authors the entry and runs `log-session` (Pro-only, no API key)
 - Feature creep rule: park mid-session ideas in `docs/plans/quickstart-backlog.md` under "Later"
 
 ---
@@ -85,7 +82,7 @@ Planned tests for M3 (`tests/test_service.py`):
 |-----------|--------|
 | M1 — Scaffolding | ✅ Done |
 | M2 — JSON Storage Backend | ✅ Done |
-| M3 — Service layer | 🔄 Next |
-| M4 — CLI commands wired up | — |
+| M3 — Service layer | ✅ Done + merged |
+| M4 — CLI commands wired up | 🔄 Next |
 | M5 — Polish + coverage gate (≥80%) | — |
 | M6 — PyPI release | — |

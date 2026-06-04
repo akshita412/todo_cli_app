@@ -1,6 +1,6 @@
 # agent-notes: ctx="service layer tests — M3 business logic" deps=["todo_cli.service","todo_cli.models"] state=active last="tara@2026-06-04"
 
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 
 import pytest
 from todo_cli.exceptions import (
@@ -64,9 +64,9 @@ def test_complete_task_raises_for_missing_id(service):
 
 def test_complete_task_stamps_current_time(service):
     task = service.add_task("Buy milk")
-    before = datetime.utcnow()
+    before = datetime.now(timezone.utc)
     completed = service.complete_task(task.id)
-    after = datetime.utcnow()
+    after = datetime.now(timezone.utc)
     assert before <= completed.completed_at <= after
 
 

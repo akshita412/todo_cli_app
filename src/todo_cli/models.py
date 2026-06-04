@@ -1,6 +1,6 @@
-# agent-notes: { ctx: "Task dataclass and Status enum", deps: [], state: active, last: "sato@2026-05-24" }
+# agent-notes: { ctx: "Task dataclass and Status enum", deps: [], state: active, last: "sato@2026-06-04" }
 from dataclasses import dataclass, field
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from enum import Enum
 from typing import Optional
 
@@ -16,7 +16,7 @@ class Task:
     id: int = field(default=0)
     due_date: Optional[date] = field(default=None)
     status: Status = field(default=Status.PENDING)
-    created_at: datetime = field(default_factory=datetime.utcnow)
+    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     completed_at: Optional[datetime] = field(default=None)
 
     @property

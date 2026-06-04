@@ -1,6 +1,6 @@
 # agent-notes: ctx="service layer — business rules between CLI and storage" deps=["storage/base.py","models.py"] state=active last="sato@2026-06-04"
 
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from typing import List, Optional
 
 from todo_cli.exceptions import (
@@ -30,7 +30,7 @@ class TaskService:
         if task is None:
             raise TaskNotFoundError(f"No task with id {task_id}.")
         task.status = Status.COMPLETED
-        task.completed_at = datetime.utcnow()
+        task.completed_at = datetime.now(timezone.utc)
         return self._storage.update(task)
 
     def delete_task(self, task_id: int) -> None:
