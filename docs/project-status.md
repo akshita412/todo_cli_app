@@ -64,14 +64,13 @@ Each layer is independent. You can swap the storage backend (JSON → SQLite) wi
 - Merged into `main` as PR #1
 - Cleanup: switched off the deprecated `datetime.utcnow()` to timezone-aware UTC across models/service/tests — suite now runs warning-free
 
-### M4 Wave 1 — `add` + `list` wired ✅ (merged, PR #6)
-- `factory.py` — builds a `TaskService` from `TODO_BACKEND` (json default) + `TODO_DATA_PATH`
-- `todo add` now actually saves a task and prints its id; `todo list` reads them back
-- `--due` parsing, `--status` filter, and friendly errors (stderr + exit 1, no stack traces)
-- Plain-text output for now — the Rich table is Wave 3
-- `show` / `complete` / `delete` are still placeholders (Wave 2)
+### M4 — CLI fully wired ✅ (merged, PRs #6 / #8 / #9)
+- **Wave 1** — `factory.build_service()` (env-driven); `todo add` saves + prints id; `todo list` reads back; `--due` parsing, `--status` filter, friendly errors (stderr + exit 1)
+- **Wave 2** — `show` / `complete` / `delete` wired; `TaskService.get_task()`; unknown id → exit 2
+- **Wave 3** — `todo list` is now a Rich table (ID · Description · Due Date · Status) with `✓ DONE` / `! OVERDUE` / `PENDING` labels, red overdue rows, and a summary footer
+- The app is fully functional end-to-end (`uv run todo …`)
 
-**Test count: 37 tests, all passing (0 warnings).**
+**Test count: 50 tests, all passing (0 warnings).**
 
 ## Tooling set up
 - `log-session` — logs each session summary to Notion. Now push-only: Claude Code writes the entry on the Pro subscription and the tool pushes it (`NOTION_TOKEN` only, no Anthropic API key needed)
@@ -82,22 +81,11 @@ Each layer is independent. You can swap the storage backend (JSON → SQLite) wi
 
 ## What's left
 
-### M4 — Wire up the CLI (in progress)
-Connect the CLI commands to the service layer.
-
-**Contract (from PRD):** data → stdout, errors → stderr (never a stack trace),
-exit codes `0` success / `1` input error / `2` not found. `todo list` renders a
-Rich table with overdue highlighting and a summary footer.
-
-**Wave plan (one per ~30-min session):**
-1. ✅ Factory + `add` + `list` (functional, plain text) — done, PR #6
-2. 🔄 `show`, `complete`, `delete` + not-found exit codes — **next**
-3. Rich table polish (formatting, overdue highlight, summary footer)
-
-### M5 — Polish
-- SQLite backend (optional, for users who prefer it)
-- Test coverage ≥ 80%
-- Clean error messages (no stack traces ever shown to users)
+### M5 — Polish (next, lean path)
+SQLite is **deferred** (optional/opt-in; JSON is plenty for sharing with a few people).
+Two small waves:
+1. **Coverage gate** — add `--cov-fail-under=80` to pytest config and wire it into CI
+2. **Error audit / storage hardening** — make `JsonStorageBackend` raise `StorageCorruptError` / `StorageAccessError` (a corrupt `tasks.json` currently crashes with a traceback); confirm every command's failures are friendly
 
 ### M6 — Share it (install from GitHub)
 - No PyPI release. Distribute straight from the GitHub repo.
@@ -137,4 +125,4 @@ uv run todo --help     # try the CLI
 
 ---
 
-*Last updated: 2026-06-13 — M4 Wave 1 merged (PR #6): `add` + `list` wired to the service. Wave 2 (`show`/`complete`/`delete`) is next.*
+*Last updated: 2026-06-13 — M4 complete (PRs #6/#8/#9): all CLI commands wired + Rich table. 50 tests. M5 (lean polish: coverage gate + error audit; SQLite deferred) is next.*
