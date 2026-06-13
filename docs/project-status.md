@@ -75,18 +75,39 @@ Each layer is independent. You can swap the storage backend (JSON → SQLite) wi
 
 ## What's left
 
-### M4 — Wire up the CLI (next)
+### M4 — Wire up the CLI (next, planned)
 Connect the CLI commands to the service layer.
 Right now `todo add` just prints a placeholder. After M4 it will actually save a task.
+
+**Contract (from PRD):** data → stdout, errors → stderr (never a stack trace),
+exit codes `0` success / `1` input error / `2` not found. `todo list` renders a
+Rich table with overdue highlighting and a summary footer.
+
+**Plan decided 2026-06-04:**
+- Add a small service/backend factory driven by `TODO_BACKEND` + `TODO_DATA_PATH`
+- Parse `--due` in the CLI; map domain exceptions to exit codes + stderr messages
+- Add `TaskService.get_task(id)` for `show` / filtered `list`
+- **`complete` is one-way** (marks done; no un-complete/toggle in the MVP)
+
+**Wave plan (one per ~30-min session):**
+1. Factory + `add` + `list` (functional, plain text)
+2. `show`, `complete`, `delete` + not-found exit codes
+3. Rich table polish (formatting, overdue highlight, summary footer)
 
 ### M5 — Polish
 - SQLite backend (optional, for users who prefer it)
 - Test coverage ≥ 80%
 - Clean error messages (no stack traces ever shown to users)
 
-### M6 — PyPI release
-- Publish to PyPI so anyone can `pip install todo-cli`
-- Final README for public users
+### M6 — Share it (install from GitHub)
+- No PyPI release. Distribute straight from the GitHub repo.
+- Anyone interested installs with one command:
+  ```bash
+  uv tool install git+https://github.com/akshita412/todo_cli_app
+  # or: pipx install git+https://github.com/akshita412/todo_cli_app
+  ```
+- README with install + usage instructions for these users.
+- Keep `pyproject.toml` tidy so a PyPI publish stays a one-step option later if it's ever wanted.
 
 ---
 
@@ -116,4 +137,4 @@ uv run todo --help     # try the CLI
 
 ---
 
-*Last updated: 2026-06-04 — M3 complete and merged (PR #1); M4 (wire up the CLI) is next.*
+*Last updated: 2026-06-13 — M3 cleanup merged (PR #2); PyPI dropped from scope (M6 is now "install from GitHub"); M4 (wire up the CLI) is next.*
