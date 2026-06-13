@@ -9,10 +9,12 @@ Updated at the end of each working session.
 
 A command-line to-do app in Python called `todo-cli`.
 
-You install it once and use it entirely from your terminal:
+You install it once and use it entirely from your terminal (full CRUD):
 ```bash
-todo add "Write tests" --due 2026-06-01
+todo add "Write tests" --due 2027-06-01
 todo list
+todo show 1
+todo edit 1 "Write unit tests"
 todo complete 1
 todo delete 2
 ```
@@ -70,7 +72,12 @@ Each layer is independent. You can swap the storage backend (JSON → SQLite) wi
 - **Wave 3** — `todo list` is now a Rich table (ID · Description · Due Date · Status) with `✓ DONE` / `! OVERDUE` / `PENDING` labels, red overdue rows, and a summary footer
 - The app is fully functional end-to-end (`uv run todo …`)
 
-**Test count: 50 tests, all passing (0 warnings).**
+### `edit` command — CRUD complete ✅ (PR #11)
+- Added `todo edit <id> "<desc>"` (and `TaskService.update_description`) — the "Update" of CRUD that the PRD's command list had missed
+- The app now has all 6 commands: add · list · show · edit · complete · delete
+- Empty description → exit 1; unknown id → exit 2
+
+**Test count: 57 tests, all passing (0 warnings).**
 
 ## Tooling set up
 - `log-session` — logs each session summary to Notion. Now push-only: Claude Code writes the entry on the Pro subscription and the tool pushes it (`NOTION_TOKEN` only, no Anthropic API key needed)
@@ -125,4 +132,4 @@ uv run todo --help     # try the CLI
 
 ---
 
-*Last updated: 2026-06-13 — M4 complete (PRs #6/#8/#9): all CLI commands wired + Rich table. 50 tests. M5 (lean polish: coverage gate + error audit; SQLite deferred) is next.*
+*Last updated: 2026-06-13 — M4 complete + `edit` added (CRUD-complete, 6 commands; PRs #6/#8/#9/#11). 57 tests. M5 (lean polish: coverage gate + error audit; SQLite deferred) is next.*

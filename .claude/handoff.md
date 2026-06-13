@@ -12,7 +12,13 @@
 - **Wave 1** (PR #6) — `factory.build_service()` (env-driven); `add` + `list` wired; `handle_errors` → stderr + exit 1
 - **Wave 2** (PR #8) — `show` / `complete` / `delete` wired; `TaskService.get_task()`; `TaskNotFoundError` → exit 2
 - **Wave 3** (PR #9) — `list` is now a Rich table (ID · Description · Due Date · Status), `✓ DONE` / `! OVERDUE` / `PENDING` labels, red overdue rows, summary footer. Fixed a markup bug (descriptions wrapped in `rich.text.Text` so brackets render literally).
-- **50 tests passing.** App verified end-to-end via live demo.
+- **App verified end-to-end via live demo.**
+
+### `edit` command — CRUD update (PR #11, open)
+- Closed a CRUD gap: the PRD's command list omitted Update, but `CLAUDE.md` describes the app as "CRUD". Added it as a first-class MVP command (not feature creep).
+- `TaskService.update_description(id, description)` (validates non-empty; `TaskNotFoundError` on unknown id) + `todo edit <id> "<desc>"` (empty → exit 1, unknown id → exit 2).
+- PRD reconciled to list all 6 commands + CRUD framing.
+- **57 tests passing.**
 
 ### Repo housekeeping (all MERGED this session)
 - M3 cleanup — timezone-aware UTC datetimes, warning-free suite (PR #2)
@@ -27,10 +33,10 @@
 |-------|--------|
 | Models + Exceptions | ✅ Done |
 | Storage (JSON backend) | ✅ Done |
-| Service layer | ✅ Done + merged |
-| CLI: all 5 commands (`add`/`list`/`show`/`complete`/`delete`) | ✅ Done + merged |
+| Service layer | ✅ Done (+ `get_task`, `update_description`) |
+| CLI: 6 commands — `add`/`list`/`show`/`edit`/`complete`/`delete` (CRUD complete) | ✅ `add`–`delete` merged; `edit` on PR #11 |
 
-The app is **fully functional end-to-end**. Default storage is `~/.todo/tasks.json` (override with `TODO_DATA_PATH`). Run with `uv run todo …`.
+The app is **fully functional end-to-end and CRUD-complete**. Default storage is `~/.todo/tasks.json` (override with `TODO_DATA_PATH`). Run with `uv run todo …`.
 
 ---
 

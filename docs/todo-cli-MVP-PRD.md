@@ -27,10 +27,10 @@ Existing task management tools fail terminal-native users in one of two ways: th
 
 ### 3.1 MVP Goals
 
-- Users can add, list, complete, and delete tasks from a single CLI entry point (`todo`).
-- Tasks persist across sessions via a local storage backend (JSON default, SQLite opt-in).
+- Users can manage tasks (full **CRUD**) from a single CLI entry point (`todo`): add, list, show, edit, complete, and delete.
+- Tasks persist across sessions via a local storage backend (JSON default; SQLite opt-in is deferred post-MVP).
 - Due dates are validated, stored, and surfaced visually with overdue flagging.
-- The tool installs in one command (`pip install todo-cli`) and requires zero configuration.
+- The tool installs in one command (`uv tool install git+https://github.com/akshita412/todo_cli_app`) and requires zero configuration.
 - Output is composable: errors go to stderr, data goes to stdout, exit codes are standard.
 - The codebase is layered (CLI → Service → Storage) so any layer is replaceable post-MVP.
 
@@ -178,7 +178,18 @@ class Task:
 
 All commands are accessed via the `todo` entry point. Errors go to stderr, data to stdout. Exit codes: `0` = success, `1` = input error, `2` = resource not found.
 
-### 7.1 Output — `todo list`
+### 7.1 Commands
+
+| Command | Syntax | Description | Errors |
+|---------|--------|-------------|--------|
+| add | `todo add "<desc>" [--due YYYY-MM-DD]` | Create a task; prints the new id | empty desc / bad or past date → exit 1 |
+| list | `todo list [--status pending\|completed\|all]` | Rich table + summary footer | — |
+| show | `todo show <id>` | Show all fields for one task | unknown id → exit 2 |
+| edit | `todo edit <id> "<desc>"` | Update a task's description (CRUD update) | empty desc → exit 1; unknown id → exit 2 |
+| complete | `todo complete <id>` | Mark a task done (one-way) | unknown id → exit 2 |
+| delete | `todo delete <id> [--force]` | Remove a task (confirms unless `--force`) | unknown id → exit 2 |
+
+### 7.2 Output — `todo list`
 
 ```
 ┌────┬─────────────────────────┬────────────┬───────────┐
@@ -230,7 +241,12 @@ Same suite against both JSON and SQLite backends via `pytest.mark.parametrize`. 
 | M3 | Service layer — business logic, validation |
 | M4 | CLI commands wired up end-to-end |
 | M5 | Polish + coverage gate (≥ 80%) |
-| M6 | PyPI release |
+| M6 | Share it — install from GitHub (PyPI dropped) |
+
+> **Status (2026-06-13):** M1–M4 complete. CLI is CRUD-complete — `edit` added,
+> 6 commands total. SQLite backend **deferred post-MVP** (lean path; JSON is
+> sufficient for sharing with a few users). Distribution is **GitHub install**,
+> not PyPI (decided 2026-06-13).
 
 ---
 
@@ -242,13 +258,13 @@ All items in section 3.2. Not to be implemented in the MVP branch even if they a
 
 ## 12. Acceptance Criteria
 
-- `pip install todo-cli` completes on a clean Python 3.10+ environment (macOS, Ubuntu 22.04, WSL2).
-- A user can add five tasks, list them, complete two, delete one — in under two minutes — using only `--help`.
+- `uv tool install git+https://github.com/akshita412/todo_cli_app` completes on a clean Python 3.10+ environment (macOS, Ubuntu 22.04, WSL2).
+- A user can add five tasks, list them, edit one, complete two, delete one — in under two minutes — using only `--help`.
 - `todo list` renders a correctly formatted table with overdue highlighting and summary footer.
 - All commands return correct exit codes for success and error scenarios.
 - `pytest --cov` reports ≥ 80% coverage across the full package.
 - No stack traces visible to the user under normal operation.
-- Tasks persist across terminal restarts on both JSON and SQLite backends.
+- Tasks persist across terminal restarts on the JSON backend. (SQLite backend deferred post-MVP.)
 - CI passes on Python 3.10 and 3.12.
 
 ---
