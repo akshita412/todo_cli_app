@@ -108,6 +108,76 @@ def test_add_then_list_end_to_end(runner):
     assert "End to end task" in result.output
 
 
+# ── list: Rich table + summary footer (Wave 3) ───────────────────────────────
+
+
+def _add_overdue_task(tmp_path, description="Overdue task", days=1):
+    """Insert a past-due pending task straight to storage (add rejects past dates)."""
+    from datetime import date, timedelta
+
+    from todo_cli.models import Task
+    from todo_cli.storage.json_store import JsonStorageBackend
+
+    backend = JsonStorageBackend(tmp_path)
+    backend.add(Task(description=description, due_date=date.today() - timedelta(days=days)))
+
+
+def test_list_shows_status_labels(runner):
+    runner.invoke(cli, ["add", "Pending one"])
+    runner.invoke(cli, ["add", "Done one"])
+    runner.invoke(cli, ["complete", "2"])
+
+    result = runner.invoke(cli, ["list"])
+    assert result.exit_code == 0
+    assert "PENDING" in result.output
+    assert "DONE" in result.output
+
+
+def test_list_marks_overdue(runner, tmp_path):
+    _add_overdue_task(tmp_path)
+
+    result = runner.invoke(cli, ["list"])
+    assert result.exit_code == 0
+    assert "OVERDUE" in result.output
+
+
+def test_list_summary_footer(runner):
+    runner.invoke(cli, ["add", "A"])
+    runner.invoke(cli, ["add", "B"])
+    runner.invoke(cli, ["add", "C"])
+    runner.invoke(cli, ["complete", "1"])
+
+    out = runner.invoke(cli, ["list"]).output
+    assert "3 tasks" in out
+    assert "1 completed" in out
+    assert "2 pending" in out
+    assert "0 overdue" in out
+
+
+def test_list_footer_counts_overdue(runner, tmp_path):
+    _add_overdue_task(tmp_path)
+
+    out = runner.invoke(cli, ["list"]).output
+    assert "1 overdue" in out
+    assert "1 pending" in out  # an overdue task is still pending
+
+
+def test_list_shows_table_headers(runner):
+    runner.invoke(cli, ["add", "Buy milk"])
+
+    out = runner.invoke(cli, ["list"]).output
+    for header in ("ID", "Description", "Due Date", "Status"):
+        assert header in out
+
+
+def test_list_preserves_brackets_in_description(runner):
+    # Rich treats [..] as markup; user descriptions must render literally.
+    runner.invoke(cli, ["add", "[urgent] pay rent"])
+
+    out = runner.invoke(cli, ["list"]).output
+    assert "[urgent] pay rent" in out
+
+
 # ── show ──────────────────────────────────────────────────────────────────────
 
 def test_show_existing_task(runner):
