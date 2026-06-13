@@ -3,7 +3,7 @@ agent-notes:
   ctx: "codebase structural overview for humans and agents"
   deps: []
   state: active
-  last: "sato@2026-05-24"
+  last: "sato@2026-06-04"
 ---
 # Code Map
 
@@ -15,7 +15,7 @@ Read this at the start of every session to orient before touching code.
 CLI (cli.py)
   │  Click commands, output rendering, exit codes
   │  depends on ↓
-Service (service.py)  ← NOT YET BUILT (M3)
+Service (service.py)  ← DONE (M3)
   │  Pure business logic, validation, status transitions
   │  depends on ↓
 Storage (storage/)
@@ -33,13 +33,13 @@ Exceptions (exceptions.py)  ← used by all three layers
 
 | Module | Status | Purpose |
 |--------|--------|---------|
-| `cli.py` | Stub | Click entry point. All 5 commands defined but print placeholder output — not wired to service layer yet. |
-| `models.py` | Done | `Task` dataclass + `Status` enum. `is_overdue` property. |
+| `cli.py` | Stub | Click entry point. All 5 commands defined but print placeholder output — not wired to service layer yet (M4). |
+| `models.py` | Done | `Task` dataclass + `Status` enum. `is_overdue` property. Timezone-aware UTC timestamps. |
 | `exceptions.py` | Done | 6 domain exceptions: `ValidationError`, `InvalidDateError`, `TaskNotFoundError`, `StorageCorruptError`, `StorageAccessError`. |
-| `service.py` | Not started | Pure business logic (M3). |
+| `service.py` | Done | `TaskService`: `add_task`, `complete_task`, `delete_task`, `list_tasks` with validation + status rules (M3). |
 | `storage/base.py` | Done | Abstract `StorageBackend` interface: `add`, `get`, `list`, `update`, `delete`. |
-| `storage/json_store.py` | Not started | JSON backend — next up (M2). |
-| `storage/sqlite_store.py` | Not started | SQLite backend (M2, after JSON). |
+| `storage/json_store.py` | Done | JSON backend — full CRUD, persists to `~/.todo/tasks.json` (M2). |
+| `storage/sqlite_store.py` | Not started | SQLite backend — opt-in alternative (M5). |
 
 ## CLI Commands (top-level, all stubbed)
 
@@ -61,8 +61,8 @@ No `duration` field — dropped from PRD.
 | File | Tests | Focus |
 |------|-------|-------|
 | `tests/test_cli.py` | 8 | CLI smoke tests — happy path per command |
-| `tests/test_storage.py` | Not created yet | JSON + SQLite backends (M2) |
-| `tests/test_service.py` | Not created yet | Service layer logic (M3) |
+| `tests/test_storage.py` | 8 | JSON backend operations (M2) |
+| `tests/test_service.py` | 13 | Service layer logic + validation (M3) |
 
 ## Storage Path (runtime)
 

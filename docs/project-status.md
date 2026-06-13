@@ -55,10 +55,19 @@ Each layer is independent. You can swap the storage backend (JSON → SQLite) wi
 - Data survives restart (reads from disk on every call)
 - 8 tests covering all storage operations
 
-**Test count: 16 tests, all passing.**
+### M3 — Service layer ✅ (merged, PR #1)
+- `service.py` — `TaskService`, the business logic between CLI and storage
+- Validates descriptions (rejects empty → `ValidationError`)
+- Validates due dates (rejects past dates → `InvalidDateError`)
+- `complete`/`delete` raise `TaskNotFoundError` on unknown IDs; complete stamps a UTC timestamp
+- 13 tests, written first (TDD), all passing
+- Merged into `main` as PR #1
+- Cleanup: switched off the deprecated `datetime.utcnow()` to timezone-aware UTC across models/service/tests — suite now runs warning-free
+
+**Test count: 29 tests, all passing (0 warnings).**
 
 ## Tooling set up
-- `log-session` — logs each session summary to Notion automatically (`log-session --notes "..."`)
+- `log-session` — logs each session summary to Notion. Now push-only: Claude Code writes the entry on the Pro subscription and the tool pushes it (`NOTION_TOKEN` only, no Anthropic API key needed)
 - `gh` CLI — installed and authenticated, manages the GitHub Projects board
 - GitHub Projects board — synced with milestone progress (github.com/akshita412/todo_cli_app → Projects → Todo CLI)
 
@@ -66,13 +75,7 @@ Each layer is independent. You can swap the storage backend (JSON → SQLite) wi
 
 ## What's left
 
-### M3 — Service layer (next)
-`service.py` — the business logic between CLI and storage.
-- Validate descriptions (not empty, max 255 chars)
-- Validate due dates (can't be in the past)
-- Handle complete/delete with proper error messages
-
-### M4 — Wire up the CLI
+### M4 — Wire up the CLI (next)
 Connect the CLI commands to the service layer.
 Right now `todo add` just prints a placeholder. After M4 it will actually save a task.
 
@@ -94,10 +97,11 @@ Right now `todo add` just prints a placeholder. After M4 it will actually save a
 | `src/todo_cli/models.py` | Task data structure |
 | `src/todo_cli/exceptions.py` | Error types |
 | `src/todo_cli/cli.py` | CLI entry point |
-| `src/todo_cli/service.py` | Business logic (not built yet) |
+| `src/todo_cli/service.py` | Business logic (validation, status rules) |
 | `src/todo_cli/storage/json_store.py` | JSON storage backend |
 | `tests/test_cli.py` | CLI tests |
 | `tests/test_storage.py` | Storage tests |
+| `tests/test_service.py` | Service layer tests |
 | `pyproject.toml` | Dependencies and build config |
 
 ---
@@ -112,4 +116,4 @@ uv run todo --help     # try the CLI
 
 ---
 
-*Last updated: 2026-05-28 — M2 complete, starting M3 next session.*
+*Last updated: 2026-06-04 — M3 complete and merged (PR #1); M4 (wire up the CLI) is next.*
