@@ -1,19 +1,18 @@
 # Session Handoff
 
 **Date:** 2026-06-13
-**Branch:** docs/wave1-handoff (off main)
-**Last merged work:** PR #6 — feat(m4): wire add + list (Wave 1, MERGED into main)
+**Branch:** docs/m4-done-m5-plan (off main)
+**Last merged work:** PR #9 — feat(m4): Rich table for list (Wave 3, MERGED) — **M4 complete**
 
 ---
 
 ## What was completed this session
 
-### M4 Wave 1 — `add` + `list` wired (DONE + MERGED, PR #6)
-- `src/todo_cli/factory.py` — `build_service()` reads `TODO_BACKEND` (json default) + `TODO_DATA_PATH`; unknown backend → `ValueError`
-- `src/todo_cli/cli.py` — `add` (parse `--due`, persist, print new id) and `list` (`--status` filter, plain-text) wired to `TaskService`; `handle_errors` maps domain errors → stderr + exit 1
-- `complete` docstring fixed "toggle" → "mark complete" (body still a stub)
-- `tests/test_factory.py` (3) + rewritten `tests/test_cli.py` — **37 passing**
-- 3-lens review: 0 Critical / 0 Important
+### M4 — CLI wired to the service (ALL THREE WAVES DONE + MERGED)
+- **Wave 1** (PR #6) — `factory.build_service()` (env-driven); `add` + `list` wired; `handle_errors` → stderr + exit 1
+- **Wave 2** (PR #8) — `show` / `complete` / `delete` wired; `TaskService.get_task()`; `TaskNotFoundError` → exit 2
+- **Wave 3** (PR #9) — `list` is now a Rich table (ID · Description · Due Date · Status), `✓ DONE` / `! OVERDUE` / `PENDING` labels, red overdue rows, summary footer. Fixed a markup bug (descriptions wrapped in `rich.text.Text` so brackets render literally).
+- **50 tests passing.** App verified end-to-end via live demo.
 
 ### Repo housekeeping (all MERGED this session)
 - M3 cleanup — timezone-aware UTC datetimes, warning-free suite (PR #2)
@@ -29,69 +28,45 @@
 | Models + Exceptions | ✅ Done |
 | Storage (JSON backend) | ✅ Done |
 | Service layer | ✅ Done + merged |
-| CLI: `add` + `list` | ✅ Done + merged (Wave 1) |
-| CLI: `show` / `complete` / `delete` | ❌ Stubbed — Wave 2 |
+| CLI: all 5 commands (`add`/`list`/`show`/`complete`/`delete`) | ✅ Done + merged |
 
-`add` and `list` now persist/read real tasks. `show`, `complete`, `delete` still print placeholders and are NOT connected to `TaskService`.
+The app is **fully functional end-to-end**. Default storage is `~/.todo/tasks.json` (override with `TODO_DATA_PATH`). Run with `uv run todo …`.
 
 ---
 
-## Next session — M4 Wave 2: `show`, `complete`, `delete`
+## Next: M5 — Polish (LEAN path; SQLite deferred)
 
-**Status:** Wave 1 done + merged. Wave 2 is next.
+**Status:** Scoped 2026-06-13. SQLite backend explicitly deferred (optional/opt-in;
+JSON is plenty for sharing with a few people; clean add-on later). Two small waves.
 
-### Goal
-Wire the 3 remaining stubbed commands (`show`, `complete`, `delete`) to `TaskService`,
-with `TaskNotFoundError` → **exit 2**. Extend the existing `handle_errors` wrapper in
-`cli.py` to map not-found → 2 (it already maps other `TodoError` → 1).
+### Wave A — Coverage gate (≥80%)
+- `pytest-cov` is already a dev dependency. Add `--cov=todo_cli --cov-report=term-missing
+  --cov-fail-under=80` to the pytest config in `pyproject.toml`.
+- Wire it into the CI workflow so coverage <80% fails the build.
+- **Acceptance:** `uv run pytest` reports coverage; CI red if <80%. (Likely already
+  well above with 50 tests — this ratchets it in.)
 
-### Wave 2 specifics
-- **Add `TaskService.get_task(id)`** (raises `TaskNotFoundError`) — small M3-service extension `show` needs.
-- `show <id>` → print all fields; unknown id → exit 2.
-- `complete <id>` → `complete_task` (one-way); unknown id → exit 2. Replace stub "Toggled" message.
-- `delete <id>` → `delete_task`; `--force` skips the confirm prompt; unknown id → exit 2.
-- Tests first (TDD): not-found exit-2 paths, `--force` vs confirm, show output.
+### Wave B — Error-message audit / storage hardening
+- **Known gap found while scoping:** `exceptions.py` defines `StorageCorruptError` and
+  `StorageAccessError`, but `json_store.py` never raises them. A hand-corrupted
+  `~/.todo/tasks.json` → `json.JSONDecodeError` → **uncaught traceback** (violates the
+  PRD "never a stack trace" rule).
+- Work: `JsonStorageBackend` raises `StorageCorruptError` on unparseable JSON and
+  `StorageAccessError` on read/write failure; both already flow through `handle_errors`
+  → exit 1. Audit every command's failure paths for friendly messages.
+- **Acceptance:** corrupt/unreadable data file → friendly stderr + exit 1, no traceback;
+  tests cover it.
+- *(Minor cosmetic nits like footer pluralization can fold in here or be skipped.)*
 
-### Original M4 goal (for reference)
-Wire the 5 stubbed Click commands in `src/todo_cli/cli.py` to `TaskService` so they
-actually persist and read tasks. (Wave 1 did `add` + `list`.)
+**Net lean M5 ≈ 1.5 sessions.** Then M6 (README + verify GitHub install) is the finish.
 
-### Contract (from PRD §7–8)
-- **Exit codes:** `0` success · `1` input error · `2` resource not found
-- **Streams:** data → stdout, errors → stderr, **never** a stack trace
-- **`todo list`:** Rich table — ID · Description · Due Date · Status — with
-  `! OVERDUE` / `✓ DONE` / `PENDING`, plus summary footer
-  (`N tasks · X completed · Y pending · Z overdue`)
-- **Tests:** Click `CliRunner` with temp-file storage injected via `TODO_DATA_PATH`
+### M4 contract delivered (for reference)
+- Exit codes `0`/`1`/`2`; data→stdout, errors→stderr, never a stack trace.
+- `todo list`: Rich table (ID · Description · Due Date · Status) + `✓ DONE` /
+  `! OVERDUE` / `PENDING` + footer `N tasks · X completed · Y pending · Z overdue`.
 
-### Design (decided this planning session)
-1. **Service/backend factory** — a helper that reads `TODO_BACKEND` (json default;
-   sqlite is M5) and `TODO_DATA_PATH`, returns a `TaskService`. Tests point
-   `TODO_DATA_PATH` at a tmp dir. (Implements the already-locked env-var contract.)
-2. **`--due` parsing** in the CLI: string → `date`; bad format → `InvalidDateError` → exit 1.
-3. **Error → exit-code mapping:** `ValidationError`/`InvalidDateError` → 1,
-   `TaskNotFoundError` → 2, storage errors → 1; all messages to stderr.
-4. **Add `TaskService.get_task(id)`** (raises `TaskNotFoundError`) so `show` and
-   `list --status` have a clean read path. Small extension to the M3 service.
-5. **`complete` is ONE-WAY** — see locked decisions. The stub docstring still says
-   "toggle"; fix it to "mark complete" during M4.
-
-### Command mapping
-| Command | Service call | Notes |
-|---------|-------------|-------|
-| `add` | `add_task` | parse `--due`; print new id |
-| `list` | `list_tasks` | filter by `--status`; Rich table + footer + overdue highlight |
-| `show` | `get_task` (new) | not-found → exit 2 |
-| `complete` | `complete_task` | one-way; not-found → exit 2 |
-| `delete` | `delete_task` | `--force` skips confirm; not-found → exit 2 |
-
-### Wave plan (one wave per ~30-min session, TDD + approval each step)
-- **Wave 1** ✅ — factory + `add` + `list` (functional output + `--status` filter, plain text). Done + merged (PR #6).
-- **Wave 2** 🔄 — `show`, `complete`, `delete` + `TaskNotFoundError` → exit 2. **Next.**
-- **Wave 3** — Rich table polish: formatting, overdue highlight, summary footer.
-
-### Housekeeping before starting Wave 2
-- Move the M4 board item's Wave 2 work to **In Progress** before coding.
+### Housekeeping before starting M5
+- Move the M5 board item to **In Progress** before coding.
 
 ---
 
@@ -130,6 +105,6 @@ actually persist and read tasks. (Wave 1 did `add` + `list`.)
 | M1 — Scaffolding | ✅ Done |
 | M2 — JSON Storage Backend | ✅ Done |
 | M3 — Service layer | ✅ Done + merged |
-| M4 — CLI commands wired up | 🔄 In progress — Wave 1 done; Waves 2–3 left |
-| M5 — Polish + coverage gate (≥80%) | — |
+| M4 — CLI commands wired up | ✅ Done + merged (Waves 1–3) |
+| M5 — Polish (coverage gate + error audit; SQLite deferred) | 🔄 Next |
 | M6 — Share it (install from GitHub) | — |
