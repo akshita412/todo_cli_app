@@ -1,4 +1,4 @@
-# agent-notes: ctx="service layer tests — M3 business logic" deps=["todo_cli.service","todo_cli.models"] state=active last="tara@2026-06-04"
+# agent-notes: ctx="service layer tests — business logic incl. get_task" deps=["todo_cli.service","todo_cli.models"] state=active last="tara@2026-06-13"
 
 from datetime import date, datetime, timedelta, timezone
 
@@ -94,3 +94,15 @@ def test_list_tasks_returns_all(service):
     service.add_task("Second")
     tasks = service.list_tasks()
     assert [t.description for t in tasks] == ["First", "Second"]
+
+
+def test_get_task_returns_matching_task(service):
+    task = service.add_task("Buy milk")
+    fetched = service.get_task(task.id)
+    assert fetched.id == task.id
+    assert fetched.description == "Buy milk"
+
+
+def test_get_task_raises_for_missing_id(service):
+    with pytest.raises(TaskNotFoundError):
+        service.get_task(999)

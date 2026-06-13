@@ -1,11 +1,11 @@
-# agent-notes: { ctx: "CLI entry point; add/list wired to service, show/complete/delete stubbed", deps: [factory.py, service.py, exceptions.py, models.py], state: active, last: "sato@2026-06-13" }
+# agent-notes: { ctx: "CLI entry point; all five commands wired to service", deps: [factory.py, service.py, exceptions.py, models.py], state: active, last: "sato@2026-06-13" }
 import functools
 import sys
 from datetime import date
 
 import click
 
-from todo_cli.exceptions import InvalidDateError, TodoError
+from todo_cli.exceptions import InvalidDateError, TaskNotFoundError, TodoError
 from todo_cli.factory import build_service
 from todo_cli.models import Status, Task
 
@@ -13,14 +13,17 @@ from todo_cli.models import Status, Task
 def handle_errors(func):
     """Map domain errors to friendly stderr messages + exit codes.
 
-    TodoError -> message on stderr, exit 1 (no stack trace).
-    Wave 2 will extend this for TaskNotFoundError -> exit 2.
+    TaskNotFoundError -> exit 2; any other TodoError -> exit 1.
+    Messages go to stderr; no stack trace reaches the user.
     """
 
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
         try:
             return func(*args, **kwargs)
+        except TaskNotFoundError as exc:
+            click.echo(f"Error: {exc}", err=True)
+            sys.exit(2)
         except TodoError as exc:
             click.echo(f"Error: {exc}", err=True)
             sys.exit(1)
@@ -88,23 +91,36 @@ def list_tasks(status: str) -> None:
 
 @cli.command()
 @click.argument("task_id", type=int)
+@handle_errors
 def complete(task_id: int) -> None:
     """Mark a task complete."""
-    click.echo(f"Toggled task {task_id}.")
+    task = build_service().complete_task(task_id)
+    click.echo(f"Completed task {task.id}: {task.description}")
 
 
 @cli.command()
 @click.argument("task_id", type=int)
 @click.option("--force", is_flag=True, help="Skip confirmation prompt.")
+@handle_errors
 def delete(task_id: int, force: bool) -> None:
     """Permanently delete a task."""
     if not force:
         click.confirm(f"Delete task {task_id}?", abort=True)
+    build_service().delete_task(task_id)
     click.echo(f"Deleted task {task_id}.")
 
 
 @cli.command()
 @click.argument("task_id", type=int)
+@handle_errors
 def show(task_id: int) -> None:
     """Show all fields for a single task."""
-    click.echo(f"Task {task_id}: (not yet implemented)")
+    task = build_service().get_task(task_id)
+    due = task.due_date.isoformat() if task.due_date else "—"
+    completed = task.completed_at.isoformat() if task.completed_at else "—"
+    click.echo(f"Task {task.id}:")
+    click.echo(f"  Description: {task.description}")
+    click.echo(f"  Status:      {task.status.value}")
+    click.echo(f"  Due:         {due}")
+    click.echo(f"  Created:     {task.created_at.isoformat()}")
+    click.echo(f"  Completed:   {completed}")
