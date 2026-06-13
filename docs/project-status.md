@@ -64,7 +64,14 @@ Each layer is independent. You can swap the storage backend (JSON → SQLite) wi
 - Merged into `main` as PR #1
 - Cleanup: switched off the deprecated `datetime.utcnow()` to timezone-aware UTC across models/service/tests — suite now runs warning-free
 
-**Test count: 29 tests, all passing (0 warnings).**
+### M4 Wave 1 — `add` + `list` wired ✅ (merged, PR #6)
+- `factory.py` — builds a `TaskService` from `TODO_BACKEND` (json default) + `TODO_DATA_PATH`
+- `todo add` now actually saves a task and prints its id; `todo list` reads them back
+- `--due` parsing, `--status` filter, and friendly errors (stderr + exit 1, no stack traces)
+- Plain-text output for now — the Rich table is Wave 3
+- `show` / `complete` / `delete` are still placeholders (Wave 2)
+
+**Test count: 37 tests, all passing (0 warnings).**
 
 ## Tooling set up
 - `log-session` — logs each session summary to Notion. Now push-only: Claude Code writes the entry on the Pro subscription and the tool pushes it (`NOTION_TOKEN` only, no Anthropic API key needed)
@@ -75,23 +82,16 @@ Each layer is independent. You can swap the storage backend (JSON → SQLite) wi
 
 ## What's left
 
-### M4 — Wire up the CLI (next, planned)
+### M4 — Wire up the CLI (in progress)
 Connect the CLI commands to the service layer.
-Right now `todo add` just prints a placeholder. After M4 it will actually save a task.
 
 **Contract (from PRD):** data → stdout, errors → stderr (never a stack trace),
 exit codes `0` success / `1` input error / `2` not found. `todo list` renders a
 Rich table with overdue highlighting and a summary footer.
 
-**Plan decided 2026-06-04:**
-- Add a small service/backend factory driven by `TODO_BACKEND` + `TODO_DATA_PATH`
-- Parse `--due` in the CLI; map domain exceptions to exit codes + stderr messages
-- Add `TaskService.get_task(id)` for `show` / filtered `list`
-- **`complete` is one-way** (marks done; no un-complete/toggle in the MVP)
-
 **Wave plan (one per ~30-min session):**
-1. Factory + `add` + `list` (functional, plain text)
-2. `show`, `complete`, `delete` + not-found exit codes
+1. ✅ Factory + `add` + `list` (functional, plain text) — done, PR #6
+2. 🔄 `show`, `complete`, `delete` + not-found exit codes — **next**
 3. Rich table polish (formatting, overdue highlight, summary footer)
 
 ### M5 — Polish
@@ -137,4 +137,4 @@ uv run todo --help     # try the CLI
 
 ---
 
-*Last updated: 2026-06-13 — M3 cleanup merged (PR #2); PyPI dropped from scope (M6 is now "install from GitHub"); M4 (wire up the CLI) is next.*
+*Last updated: 2026-06-13 — M4 Wave 1 merged (PR #6): `add` + `list` wired to the service. Wave 2 (`show`/`complete`/`delete`) is next.*
