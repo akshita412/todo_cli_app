@@ -146,6 +146,16 @@ def delete(task_id: int, force: bool) -> None:
 
 @cli.command()
 @click.argument("task_id", type=int)
+@click.argument("description")
+@handle_errors
+def edit(task_id: int, description: str) -> None:
+    """Update a task's description."""
+    task = build_service().update_description(task_id, description)
+    click.echo(f"Updated task {task.id}: {task.description}")
+
+
+@cli.command()
+@click.argument("task_id", type=int)
 @handle_errors
 def show(task_id: int) -> None:
     """Show all fields for a single task."""

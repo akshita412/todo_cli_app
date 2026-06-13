@@ -246,3 +246,31 @@ def test_delete_confirm_no_aborts(runner):
     # task survives
     listing = runner.invoke(cli, ["list"])
     assert "Buy milk" in listing.output
+
+
+# ── edit ──────────────────────────────────────────────────────────────────────
+
+def test_edit_updates_description(runner):
+    runner.invoke(cli, ["add", "Old text"])
+    result = runner.invoke(cli, ["edit", "1", "New text"])
+    assert result.exit_code == 0
+
+    listing = runner.invoke(cli, ["list"])
+    assert "New text" in listing.output
+    assert "Old text" not in listing.output
+
+
+def test_edit_unknown_task_exits_2(runner):
+    result = runner.invoke(cli, ["edit", "999", "Whatever"])
+    assert result.exit_code == 2
+    assert result.stderr.strip()
+
+
+def test_edit_empty_description_exits_1(runner):
+    runner.invoke(cli, ["add", "Old text"])
+    result = runner.invoke(cli, ["edit", "1", ""])
+    assert result.exit_code == 1
+    assert result.stderr.strip()
+
+    listing = runner.invoke(cli, ["list"])
+    assert "Old text" in listing.output  # unchanged
