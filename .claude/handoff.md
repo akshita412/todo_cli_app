@@ -1,24 +1,24 @@
 # Session Handoff
 
-**Date:** 2026-06-04
-**Branch:** chore/post-m3-cleanup (off main @ fffb7e0)
-**Last merged work:** PR #1 — feat(m3): service layer (MERGED into main)
+**Date:** 2026-06-13
+**Branch:** docs/wave1-handoff (off main)
+**Last merged work:** PR #6 — feat(m4): wire add + list (Wave 1, MERGED into main)
 
 ---
 
 ## What was completed this session
 
-### M3 — Service layer (DONE + MERGED)
-- `src/todo_cli/service.py` — `TaskService` with `add_task`, `complete_task`, `delete_task`, `list_tasks`
-- Validation: empty desc → `ValidationError`, past due → `InvalidDateError`, unknown id → `TaskNotFoundError`
-- `tests/test_service.py` — 13 TDD tests, all green
-- **PR #1 merged into `main`** (`fffb7e0`). Local `main` fast-forwarded; feature branch deleted.
+### M4 Wave 1 — `add` + `list` wired (DONE + MERGED, PR #6)
+- `src/todo_cli/factory.py` — `build_service()` reads `TODO_BACKEND` (json default) + `TODO_DATA_PATH`; unknown backend → `ValueError`
+- `src/todo_cli/cli.py` — `add` (parse `--due`, persist, print new id) and `list` (`--status` filter, plain-text) wired to `TaskService`; `handle_errors` maps domain errors → stderr + exit 1
+- `complete` docstring fixed "toggle" → "mark complete" (body still a stub)
+- `tests/test_factory.py` (3) + rewritten `tests/test_cli.py` — **37 passing**
+- 3-lens review: 0 Critical / 0 Important
 
-### Post-M3 cleanup (this branch — not yet committed)
-- Killed the `datetime.utcnow()` deprecation: now timezone-aware `datetime.now(timezone.utc)` in `models.py`, `service.py`, and `tests/test_service.py`
-- Full suite: **29 passing, 0 warnings** (was 29 passing / 24 deprecation warnings)
-- Notion journal: removed duplicate M3 entry (one canonical entry remains)
-- `log-session` tool refactored to push-only (no Anthropic API; runs on Pro via `NOTION_TOKEN`)
+### Repo housekeeping (all MERGED this session)
+- M3 cleanup — timezone-aware UTC datetimes, warning-free suite (PR #2)
+- **PyPI dropped** — M6 reframed as "install from GitHub" (PR #3)
+- Removed template scaffolding: cloud research, enterprise stubs, 5 orphaned cloud commands (PRs #4, #5). Repo 111 → 96 files.
 
 ---
 
@@ -29,19 +29,32 @@
 | Models + Exceptions | ✅ Done |
 | Storage (JSON backend) | ✅ Done |
 | Service layer | ✅ Done + merged |
-| **CLI ↔ service wiring** | ❌ Stubbed — this is M4 |
+| CLI: `add` + `list` | ✅ Done + merged (Wave 1) |
+| CLI: `show` / `complete` / `delete` | ❌ Stubbed — Wave 2 |
 
-CLI commands (`add`, `list`, `complete`, `delete`, `show`) still print placeholders and are NOT connected to `TaskService`.
+`add` and `list` now persist/read real tasks. `show`, `complete`, `delete` still print placeholders and are NOT connected to `TaskService`.
 
 ---
 
-## Next session — M4, Wire CLI to the service layer
+## Next session — M4 Wave 2: `show`, `complete`, `delete`
 
-**Status:** Planned and scoped (2026-06-04). Not started — picking up next session.
+**Status:** Wave 1 done + merged. Wave 2 is next.
 
 ### Goal
+Wire the 3 remaining stubbed commands (`show`, `complete`, `delete`) to `TaskService`,
+with `TaskNotFoundError` → **exit 2**. Extend the existing `handle_errors` wrapper in
+`cli.py` to map not-found → 2 (it already maps other `TodoError` → 1).
+
+### Wave 2 specifics
+- **Add `TaskService.get_task(id)`** (raises `TaskNotFoundError`) — small M3-service extension `show` needs.
+- `show <id>` → print all fields; unknown id → exit 2.
+- `complete <id>` → `complete_task` (one-way); unknown id → exit 2. Replace stub "Toggled" message.
+- `delete <id>` → `delete_task`; `--force` skips the confirm prompt; unknown id → exit 2.
+- Tests first (TDD): not-found exit-2 paths, `--force` vs confirm, show output.
+
+### Original M4 goal (for reference)
 Wire the 5 stubbed Click commands in `src/todo_cli/cli.py` to `TaskService` so they
-actually persist and read tasks. Right now they print placeholders.
+actually persist and read tasks. (Wave 1 did `add` + `list`.)
 
 ### Contract (from PRD §7–8)
 - **Exit codes:** `0` success · `1` input error · `2` resource not found
@@ -73,14 +86,12 @@ actually persist and read tasks. Right now they print placeholders.
 | `delete` | `delete_task` | `--force` skips confirm; not-found → exit 2 |
 
 ### Wave plan (one wave per ~30-min session, TDD + approval each step)
-- **Wave 1** — factory + `add` + `list` (functional output + `--status` filter, plain text). Full add→list loop end-to-end.
-- **Wave 2** — `show`, `complete`, `delete` + `TaskNotFoundError` → exit 2.
+- **Wave 1** ✅ — factory + `add` + `list` (functional output + `--status` filter, plain text). Done + merged (PR #6).
+- **Wave 2** 🔄 — `show`, `complete`, `delete` + `TaskNotFoundError` → exit 2. **Next.**
 - **Wave 3** — Rich table polish: formatting, overdue highlight, summary footer.
 
-### Housekeeping before starting M4
-- This branch `chore/post-m3-cleanup` has the committed post-M3 cleanup (`e75f4f9`),
-  not yet pushed/PR'd. Decide: PR it on its own, or branch M4 off it and bundle.
-- Move the M4 board item to **In Progress** before coding.
+### Housekeeping before starting Wave 2
+- Move the M4 board item's Wave 2 work to **In Progress** before coding.
 
 ---
 
@@ -119,6 +130,6 @@ actually persist and read tasks. Right now they print placeholders.
 | M1 — Scaffolding | ✅ Done |
 | M2 — JSON Storage Backend | ✅ Done |
 | M3 — Service layer | ✅ Done + merged |
-| M4 — CLI commands wired up | 🔄 Next |
+| M4 — CLI commands wired up | 🔄 In progress — Wave 1 done; Waves 2–3 left |
 | M5 — Polish + coverage gate (≥80%) | — |
 | M6 — Share it (install from GitHub) | — |
