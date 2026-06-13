@@ -37,14 +37,49 @@ CLI commands (`add`, `list`, `complete`, `delete`, `show`) still print placehold
 
 ## Next session — M4, Wire CLI to the service layer
 
-Connect each Click command in `src/todo_cli/cli.py` to `TaskService`:
-- Construct the storage backend (JSON default, SQLite via `TODO_BACKEND=sqlite`) and wrap in `TaskService`
-- `add` → `add_task`; `list` → `list_tasks` (Rich table, overdue highlight); `complete` → `complete_task`; `delete` → `delete_task` (respect `--force`); `show` → fetch one
-- Map domain exceptions to friendly CLI errors + non-zero exit codes
-- TDD: extend `tests/test_cli.py` (Click `CliRunner`), tests first
+**Status:** Planned and scoped (2026-06-04). Not started — picking up next session.
 
-### Open housekeeping before/at start of M4
-- **Commit this cleanup branch** (`chore/post-m3-cleanup`) or fold it into the first M4 commit — currently uncommitted.
+### Goal
+Wire the 5 stubbed Click commands in `src/todo_cli/cli.py` to `TaskService` so they
+actually persist and read tasks. Right now they print placeholders.
+
+### Contract (from PRD §7–8)
+- **Exit codes:** `0` success · `1` input error · `2` resource not found
+- **Streams:** data → stdout, errors → stderr, **never** a stack trace
+- **`todo list`:** Rich table — ID · Description · Due Date · Status — with
+  `! OVERDUE` / `✓ DONE` / `PENDING`, plus summary footer
+  (`N tasks · X completed · Y pending · Z overdue`)
+- **Tests:** Click `CliRunner` with temp-file storage injected via `TODO_DATA_PATH`
+
+### Design (decided this planning session)
+1. **Service/backend factory** — a helper that reads `TODO_BACKEND` (json default;
+   sqlite is M5) and `TODO_DATA_PATH`, returns a `TaskService`. Tests point
+   `TODO_DATA_PATH` at a tmp dir. (Implements the already-locked env-var contract.)
+2. **`--due` parsing** in the CLI: string → `date`; bad format → `InvalidDateError` → exit 1.
+3. **Error → exit-code mapping:** `ValidationError`/`InvalidDateError` → 1,
+   `TaskNotFoundError` → 2, storage errors → 1; all messages to stderr.
+4. **Add `TaskService.get_task(id)`** (raises `TaskNotFoundError`) so `show` and
+   `list --status` have a clean read path. Small extension to the M3 service.
+5. **`complete` is ONE-WAY** — see locked decisions. The stub docstring still says
+   "toggle"; fix it to "mark complete" during M4.
+
+### Command mapping
+| Command | Service call | Notes |
+|---------|-------------|-------|
+| `add` | `add_task` | parse `--due`; print new id |
+| `list` | `list_tasks` | filter by `--status`; Rich table + footer + overdue highlight |
+| `show` | `get_task` (new) | not-found → exit 2 |
+| `complete` | `complete_task` | one-way; not-found → exit 2 |
+| `delete` | `delete_task` | `--force` skips confirm; not-found → exit 2 |
+
+### Wave plan (one wave per ~30-min session, TDD + approval each step)
+- **Wave 1** — factory + `add` + `list` (functional output + `--status` filter, plain text). Full add→list loop end-to-end.
+- **Wave 2** — `show`, `complete`, `delete` + `TaskNotFoundError` → exit 2.
+- **Wave 3** — Rich table polish: formatting, overdue highlight, summary footer.
+
+### Housekeeping before starting M4
+- This branch `chore/post-m3-cleanup` has the committed post-M3 cleanup (`e75f4f9`),
+  not yet pushed/PR'd. Decide: PR it on its own, or branch M4 off it and bundle.
 - Move the M4 board item to **In Progress** before coding.
 
 ---
@@ -59,8 +94,9 @@ Connect each Click command in `src/todo_cli/cli.py` to `TaskService`:
 | Storage alt | SQLite opt-in via `TODO_BACKEND=sqlite` |
 | `duration` field | Dropped — not in PRD |
 | CLI commands | Top-level, no subgroups |
+| `complete` behavior | One-way (mark done). No un-complete/toggle in MVP. |
 | CI | GitHub Actions, Python 3.10 + 3.12 |
-| PyPI publish | Real goal — M6 |
+| Distribution | Install from GitHub (`uv tool install git+…`). No PyPI. (Decided 2026-06-13.) |
 | PRD source of truth | `docs/todo-cli-MVP-PRD.md` |
 
 ---
@@ -85,4 +121,4 @@ Connect each Click command in `src/todo_cli/cli.py` to `TaskService`:
 | M3 — Service layer | ✅ Done + merged |
 | M4 — CLI commands wired up | 🔄 Next |
 | M5 — Polish + coverage gate (≥80%) | — |
-| M6 — PyPI release | — |
+| M6 — Share it (install from GitHub) | — |
