@@ -4,6 +4,9 @@ import sys
 from datetime import date
 
 import click
+from rich.console import Console
+from rich.table import Table
+from rich.text import Text
 
 from todo_cli.exceptions import InvalidDateError, TaskNotFoundError, TodoError
 from todo_cli.factory import build_service
@@ -41,13 +44,45 @@ def _parse_due(due: str) -> date:
         )
 
 
-def _format_task(task: Task) -> str:
-    """One plain-text line for a task (Rich table comes in Wave 3)."""
-    mark = "x" if task.status == Status.COMPLETED else " "
-    line = f"{task.id}  [{mark}] {task.description}"
-    if task.due_date is not None:
-        line += f"  (due {task.due_date.isoformat()})"
-    return line
+def _status_label(task: Task) -> str:
+    """Human-facing status text for the list table."""
+    if task.status == Status.COMPLETED:
+        return "✓ DONE"
+    if task.is_overdue:
+        return "! OVERDUE"
+    return "PENDING"
+
+
+def _render_table(tasks: list[Task]) -> None:
+    """Print a Rich table of tasks, then a one-line summary footer."""
+    table = Table(show_header=True, header_style="bold")
+    table.add_column("ID", justify="right")
+    table.add_column("Description")
+    table.add_column("Due Date")
+    table.add_column("Status")
+
+    completed = pending = overdue = 0
+    for task in tasks:
+        if task.status == Status.COMPLETED:
+            completed += 1
+        else:
+            pending += 1
+        if task.is_overdue:
+            overdue += 1
+        row_style = "red" if task.is_overdue else None
+        table.add_row(
+            str(task.id),
+            Text(task.description),  # Text() so brackets aren't parsed as Rich markup
+            task.due_date.isoformat() if task.due_date else "—",
+            _status_label(task),
+            style=row_style,
+        )
+
+    Console().print(table)
+    click.echo(
+        f"{len(tasks)} tasks · {completed} completed · "
+        f"{pending} pending · {overdue} overdue"
+    )
 
 
 @click.group()
@@ -85,8 +120,7 @@ def list_tasks(status: str) -> None:
         click.echo("No tasks yet.")
         return
 
-    for task in tasks:
-        click.echo(_format_task(task))
+    _render_table(tasks)
 
 
 @cli.command()
