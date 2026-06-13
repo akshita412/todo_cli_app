@@ -1,4 +1,4 @@
-# agent-notes: { ctx: "CLI tests — add/list wired to service; show/complete/delete stubbed", deps: [cli.py, factory.py], state: active, last: "sato@2026-06-13" }
+# agent-notes: { ctx: "CLI tests — all five commands wired to service", deps: [cli.py, factory.py], state: active, last: "tara@2026-06-13" }
 import pytest
 from click.testing import CliRunner
 
@@ -108,18 +108,71 @@ def test_add_then_list_end_to_end(runner):
     assert "End to end task" in result.output
 
 
-# ── still stubbed until Wave 2 (smoke only) ───────────────────────────────────
+# ── show ──────────────────────────────────────────────────────────────────────
 
-def test_complete_command_stub(runner):
+def test_show_existing_task(runner):
+    runner.invoke(cli, ["add", "Buy milk"])
+    result = runner.invoke(cli, ["show", "1"])
+    assert result.exit_code == 0
+    assert "Buy milk" in result.output
+    assert "pending" in result.output.lower()
+
+
+def test_show_unknown_task_exits_2(runner):
+    result = runner.invoke(cli, ["show", "999"])
+    assert result.exit_code == 2
+    assert result.stderr.strip()
+
+
+# ── complete ──────────────────────────────────────────────────────────────────
+
+def test_complete_existing_task(runner):
+    runner.invoke(cli, ["add", "Buy milk"])
     result = runner.invoke(cli, ["complete", "1"])
     assert result.exit_code == 0
 
+    # actually marked completed
+    completed = runner.invoke(cli, ["list", "--status", "completed"])
+    assert "Buy milk" in completed.output
 
-def test_delete_command_with_force(runner):
+
+def test_complete_unknown_task_exits_2(runner):
+    result = runner.invoke(cli, ["complete", "999"])
+    assert result.exit_code == 2
+    assert result.stderr.strip()
+
+
+# ── delete ────────────────────────────────────────────────────────────────────
+
+def test_delete_with_force(runner):
+    runner.invoke(cli, ["add", "Buy milk"])
     result = runner.invoke(cli, ["delete", "1", "--force"])
     assert result.exit_code == 0
 
+    listing = runner.invoke(cli, ["list"])
+    assert "Buy milk" not in listing.output
 
-def test_show_command(runner):
-    result = runner.invoke(cli, ["show", "1"])
+
+def test_delete_unknown_task_exits_2(runner):
+    result = runner.invoke(cli, ["delete", "999", "--force"])
+    assert result.exit_code == 2
+    assert result.stderr.strip()
+
+
+def test_delete_confirm_yes(runner):
+    runner.invoke(cli, ["add", "Buy milk"])
+    result = runner.invoke(cli, ["delete", "1"], input="y\n")
     assert result.exit_code == 0
+
+    listing = runner.invoke(cli, ["list"])
+    assert "Buy milk" not in listing.output
+
+
+def test_delete_confirm_no_aborts(runner):
+    runner.invoke(cli, ["add", "Buy milk"])
+    result = runner.invoke(cli, ["delete", "1"], input="n\n")
+    assert result.exit_code == 1
+
+    # task survives
+    listing = runner.invoke(cli, ["list"])
+    assert "Buy milk" in listing.output

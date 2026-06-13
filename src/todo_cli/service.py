@@ -1,4 +1,4 @@
-# agent-notes: ctx="service layer — business rules between CLI and storage" deps=["storage/base.py","models.py"] state=active last="sato@2026-06-04"
+# agent-notes: ctx="service layer — business rules between CLI and storage" deps=["storage/base.py","models.py"] state=active last="sato@2026-06-13"
 
 from datetime import date, datetime, timezone
 from typing import List, Optional
@@ -37,6 +37,12 @@ class TaskService:
         if self._storage.get(task_id) is None:
             raise TaskNotFoundError(f"No task with id {task_id}.")
         self._storage.delete(task_id)
+
+    def get_task(self, task_id: int) -> Task:
+        task = self._storage.get(task_id)
+        if task is None:
+            raise TaskNotFoundError(f"No task with id {task_id}.")
+        return task
 
     def list_tasks(self) -> List[Task]:
         return self._storage.list()
