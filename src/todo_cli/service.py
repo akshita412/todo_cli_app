@@ -44,5 +44,12 @@ class TaskService:
             raise TaskNotFoundError(f"No task with id {task_id}.")
         return task
 
+    def update_description(self, task_id: int, description: str) -> Task:
+        if not description or not description.strip():
+            raise ValidationError("Task description cannot be empty.")
+        task = self.get_task(task_id)
+        task.description = description
+        return self._storage.update(task)
+
     def list_tasks(self) -> List[Task]:
         return self._storage.list()

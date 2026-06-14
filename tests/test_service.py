@@ -106,3 +106,21 @@ def test_get_task_returns_matching_task(service):
 def test_get_task_raises_for_missing_id(service):
     with pytest.raises(TaskNotFoundError):
         service.get_task(999)
+
+
+def test_update_description_changes_and_persists(service):
+    task = service.add_task("Old text")
+    service.update_description(task.id, "New text")
+    assert service.get_task(task.id).description == "New text"
+
+
+def test_update_description_raises_for_missing_id(service):
+    with pytest.raises(TaskNotFoundError):
+        service.update_description(999, "New text")
+
+
+@pytest.mark.parametrize("bad", ["", "   "])
+def test_update_description_raises_on_empty(service, bad):
+    task = service.add_task("Old text")
+    with pytest.raises(ValidationError):
+        service.update_description(task.id, bad)
