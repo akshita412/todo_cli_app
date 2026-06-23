@@ -1,4 +1,4 @@
-# agent-notes: { ctx: "CLI tests — all five commands wired to service", deps: [cli.py, factory.py], state: active, last: "tara@2026-06-13" }
+# agent-notes: { ctx: "CLI tests — all five commands wired to service", deps: [cli.py, factory.py], state: active, last: "tara@2026-06-23" }
 import pytest
 from click.testing import CliRunner
 
@@ -176,6 +176,30 @@ def test_list_preserves_brackets_in_description(runner):
 
     out = runner.invoke(cli, ["list"]).output
     assert "[urgent] pay rent" in out
+
+
+# ── storage corruption: friendly failure (M5 Wave 2) ──────────────────────────
+
+def test_list_on_corrupt_file_is_friendly(runner, tmp_path):
+    # The data file is garbage; `list` must fail cleanly, not crash with a stack
+    # trace. A friendly one-liner goes to stderr.
+    (tmp_path / "tasks.json").write_text("{ not valid json")
+
+    result = runner.invoke(cli, ["list"])
+    assert result.exit_code == 1
+    assert result.stderr.strip()  # friendly message present
+    assert "Traceback" not in result.stderr  # no stack trace leaks to the user
+
+
+def test_add_on_corrupt_file_is_friendly(runner, tmp_path):
+    # Same guarantee on the write path: `add` reads first, hits the corrupt file,
+    # and must report a friendly error rather than raising.
+    (tmp_path / "tasks.json").write_text("{ not valid json")
+
+    result = runner.invoke(cli, ["add", "Buy milk"])
+    assert result.exit_code == 1
+    assert result.stderr.strip()
+    assert "Traceback" not in result.stderr
 
 
 # ── show ──────────────────────────────────────────────────────────────────────

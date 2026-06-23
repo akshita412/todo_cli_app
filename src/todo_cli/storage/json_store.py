@@ -1,4 +1,4 @@
-# agent-notes: ctx="JSON file storage backend" deps=["storage/base.py","models.py"] state=active last="sato@2026-05-28"
+# agent-notes: ctx="JSON file storage backend" deps=["storage/base.py","models.py"] state=active last="sato@2026-06-23"
 
 import json
 from dataclasses import asdict
@@ -6,6 +6,7 @@ from datetime import date, datetime
 from pathlib import Path
 from typing import List, Optional
 
+from todo_cli.exceptions import StorageAccessError, StorageCorruptError
 from todo_cli.models import Status, Task
 from todo_cli.storage.base import StorageBackend
 
@@ -23,22 +24,50 @@ class JsonStorageBackend(StorageBackend):
     def _load(self) -> dict:
         if not self._path.exists():
             return {"next_id": 1, "tasks": {}}
-        with self._path.open() as f:
-            return json.load(f)
+        try:
+            with self._path.open() as f:
+                data = json.load(f)
+        except json.JSONDecodeError as exc:
+            raise StorageCorruptError(
+                f"Task file is corrupted: {self._path}"
+            ) from exc
+        except OSError as exc:
+            raise StorageAccessError(
+                f"Cannot access task file: {self._path}"
+            ) from exc
+
+        if (
+            not isinstance(data, dict)
+            or not isinstance(data.get("next_id"), int)
+            or isinstance(data.get("next_id"), bool)
+            or not isinstance(data.get("tasks"), dict)
+        ):
+            raise StorageCorruptError(f"Task file is corrupted: {self._path}")
+        return data
 
     def _save(self, data: dict) -> None:
-        with self._path.open("w") as f:
-            json.dump(data, f, indent=2, default=str)
+        try:
+            with self._path.open("w") as f:
+                json.dump(data, f, indent=2, default=str)
+        except OSError as exc:
+            raise StorageAccessError(
+                f"Cannot access task file: {self._path}"
+            ) from exc
 
     def _deserialize(self, raw: dict) -> Task:
-        return Task(
-            id=raw["id"],
-            description=raw["description"],
-            status=Status(raw["status"]),
-            due_date=date.fromisoformat(raw["due_date"]) if raw.get("due_date") else None,
-            created_at=datetime.fromisoformat(raw["created_at"]),
-            completed_at=datetime.fromisoformat(raw["completed_at"]) if raw.get("completed_at") else None,
-        )
+        try:
+            return Task(
+                id=raw["id"],
+                description=raw["description"],
+                status=Status(raw["status"]),
+                due_date=date.fromisoformat(raw["due_date"]) if raw.get("due_date") else None,
+                created_at=datetime.fromisoformat(raw["created_at"]),
+                completed_at=datetime.fromisoformat(raw["completed_at"]) if raw.get("completed_at") else None,
+            )
+        except (KeyError, ValueError, TypeError) as exc:
+            raise StorageCorruptError(
+                f"Task file is corrupted: {self._path}"
+            ) from exc
 
     # ── StorageBackend interface ──────────────────────────────────────────────
 
