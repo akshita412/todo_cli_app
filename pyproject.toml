@@ -19,9 +19,9 @@ todo = "todo_cli.cli:cli"
 packages = ["src/todo_cli"]
 
 [tool.pytest.ini_options]
-# Coverage gate (M5): fail the suite if total coverage drops below 80%.
+# Coverage gate (M5): fail the suite if total coverage drops below 95%.
 # Centralized here so both local `uv run pytest` and CI enforce one threshold.
-addopts = "--cov=todo_cli --cov-report=term-missing --cov-fail-under=80"
+addopts = "--cov=todo_cli --cov-report=term-missing --cov-fail-under=95"
 testpaths = ["tests"]
 
 [dependency-groups]
