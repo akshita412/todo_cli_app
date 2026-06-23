@@ -72,6 +72,15 @@ Each layer is independent. You can swap the storage backend (JSON → SQLite) wi
 
 **Test count: 50 tests, all passing (0 warnings).**
 
+### M5 — Polish ✅ (merged, PRs #13 / #17)
+SQLite stayed **deferred** (JSON is plenty for sharing with a few people). Two waves:
+- **Wave 1 — Coverage gate (#12)** — `--cov-fail-under=80` centralized in `pyproject.toml` so local `uv run pytest` and CI enforce one threshold. CI step simplified to plain `uv run pytest`.
+- **Wave 2 — Storage hardening (#14)** — a corrupt/unreadable `tasks.json` no longer crashes with a traceback. `JsonStorageBackend` raises `StorageCorruptError` (unparseable JSON, wrong top-level shape, malformed task record) and `StorageAccessError` (read/write `OSError`), which the CLI renders as a friendly message + exit 1. Built TDD (Tara red → Sato green) and passed a three-lens review (Vik + Tara + Pierrot) that caught record-level corruption escaping `_deserialize`.
+
+**Test count: 70 tests, all passing. Coverage 93% (gate ≥80%).**
+
+**Deferred follow-ups (tracked):** atomic writes #15 · remove dead `commands/tasks.py` stub #16.
+
 ## Tooling set up
 - `log-session` — logs each session summary to Notion. Now push-only: Claude Code writes the entry on the Pro subscription and the tool pushes it (`NOTION_TOKEN` only, no Anthropic API key needed)
 - `gh` CLI — installed and authenticated, manages the GitHub Projects board
@@ -81,13 +90,7 @@ Each layer is independent. You can swap the storage backend (JSON → SQLite) wi
 
 ## What's left
 
-### M5 — Polish (next, lean path)
-SQLite is **deferred** (optional/opt-in; JSON is plenty for sharing with a few people).
-Two small waves:
-1. **Coverage gate** — add `--cov-fail-under=80` to pytest config and wire it into CI
-2. **Error audit / storage hardening** — make `JsonStorageBackend` raise `StorageCorruptError` / `StorageAccessError` (a corrupt `tasks.json` currently crashes with a traceback); confirm every command's failures are friendly
-
-### M6 — Share it (install from GitHub)
+### M6 — Share it (install from GitHub) ← next
 - No PyPI release. Distribute straight from the GitHub repo.
 - Anyone interested installs with one command:
   ```bash
@@ -125,4 +128,4 @@ uv run todo --help     # try the CLI
 
 ---
 
-*Last updated: 2026-06-13 — M4 complete (PRs #6/#8/#9): all CLI commands wired + Rich table. 50 tests. M5 (lean polish: coverage gate + error audit; SQLite deferred) is next.*
+*Last updated: 2026-06-23 — M5 complete (PRs #13/#17): coverage gate + storage hardening. 70 tests, 93% coverage. SQLite still deferred. M6 (install from GitHub) is next; follow-ups #15 (atomic writes) and #16 (dead-code cleanup) tracked.*
