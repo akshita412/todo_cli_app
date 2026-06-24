@@ -148,17 +148,13 @@ def test_unreadable_file_raises_storage_access_error(store, tmp_path):
 
 
 def test_write_permission_error_raises_storage_access_error(store, monkeypatch):
-    # Simulate the OS refusing to open the file for writing. add() first reads
-    # (no file yet → default in-memory data), then _save() opens "w" → boom.
-    original_open = Path.open
+    # Simulate the OS refusing the write. add() first reads (no file yet → default
+    # in-memory data), then the atomic _save() creates its temp file via
+    # tempfile.mkstemp → boom. The OSError must surface as StorageAccessError.
+    def boom(*args, **kwargs):
+        raise PermissionError("write denied")
 
-    def fake_open(self, *args, **kwargs):
-        mode = args[0] if args else kwargs.get("mode", "r")
-        if "w" in mode or "a" in mode or "x" in mode:
-            raise PermissionError("write denied")
-        return original_open(self, *args, **kwargs)
-
-    monkeypatch.setattr(Path, "open", fake_open)
+    monkeypatch.setattr("todo_cli.storage.json_store.tempfile.mkstemp", boom)
     with pytest.raises(StorageAccessError):
         store.add(Task(description="Buy milk", status=Status.PENDING))
 
@@ -207,3 +203,55 @@ def test_corrupt_task_record_raises_storage_corrupt_error(store, tmp_path):
 
     with pytest.raises(StorageCorruptError):
         store.get(1)
+
+
+# ── #15: atomic writes — a failed save must never destroy the prior good file ──
+
+
+def test_failed_write_preserves_existing_file(store, tmp_path, monkeypatch):
+    # Seed a valid record so tasks.json holds something worth protecting.
+    store.add(Task(description="Important task", status=Status.PENDING))
+
+    # Seam choice: patch json.dump *as seen by the storage module* to raise on the
+    # NEXT save. The in-place _save does `open("w")` (which TRUNCATES the real
+    # tasks.json) and only THEN calls json.dump — so when json.dump blows up the
+    # destination is already gone → original lost (RED). An atomic _save serializes
+    # into a temp file and json.dump failing there leaves tasks.json untouched
+    # (GREEN). This pins exactly the "destination survives a torn write" contract.
+    def boom(*args, **kwargs):
+        raise OSError("disk full")
+
+    monkeypatch.setattr("todo_cli.storage.json_store.json.dump", boom)
+
+    with pytest.raises(StorageAccessError):
+        store.add(Task(description="Second task", status=Status.PENDING))
+
+    monkeypatch.undo()
+
+    # A brand-new backend reads straight from disk — no in-memory caching to mask
+    # a truncated file. The original record must still be intact.
+    fresh = JsonStorageBackend(data_dir=tmp_path)
+    recovered = fresh.get(1)
+    assert recovered is not None
+    assert recovered.description == "Important task"
+
+    # And the file itself must not have been left empty/truncated.
+    assert (tmp_path / "tasks.json").read_text().strip() != ""
+
+    # The half-written record must not have partially landed.
+    assert fresh.get(2) is None
+
+    # The atomic write's scratch temp file must have been cleaned up on failure —
+    # a leftover `.tasks-*.tmp` would hold full task data. Only the canonical file
+    # may remain.
+    assert sorted(p.name for p in tmp_path.iterdir()) == ["tasks.json"]
+
+
+def test_successful_write_leaves_no_temp_files(store, tmp_path):
+    store.add(Task(description="Buy milk", status=Status.PENDING))
+
+    entries = sorted(p.name for p in tmp_path.iterdir())
+
+    # Exactly the canonical file, nothing else — no `tasks.json.*`, `*.tmp`,
+    # `tmp*`, or other scratch artifacts from the atomic write left behind.
+    assert entries == ["tasks.json"]
