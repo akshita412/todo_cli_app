@@ -88,22 +88,25 @@ SQLite stayed **deferred** (JSON is plenty for sharing with a few people). Two w
 
 ---
 
-## What's left
+### M6 — Share it (install from GitHub) ✅ (merged, PRs #21–#24)
+No PyPI release — distribute straight from the GitHub repo. Plan + waves in `docs/sprints/sprint-m6-plan.md`. Three waves:
+- **Wave 1 — Packaging metadata** — real MIT `LICENSE` (replaced a placeholder stub) + `pyproject.toml` metadata (license, authors, readme, classifiers, keywords, project URLs); sdist constrained to packaging essentials (review caught it bundling the whole repo incl. a gitignored local-settings file). `uv build` clean, `twine check` passes.
+- **Wave 2 — Verify + README** — both git install paths verified; README rewritten for GitHub-install with every example run-checked.
+- **Wave 3 — Reconcile docs** — PRD M6 "PyPI release" → GitHub-install, SQLite marked deferred throughout, stale coverage figures fixed (≥80% → ≥95%); code-map refreshed to match the shipped codebase; README expanded into a user guide (cheat sheet + tips).
 
-### M6 — Share it (install from GitHub) 🚧 in progress
-No PyPI release — distribute straight from the GitHub repo. Plan + waves in `docs/sprints/sprint-m6-plan.md`. Anyone interested installs with one command:
-```bash
-uv tool install git+https://github.com/akshita412/todo_cli_app
-# or: pipx install git+https://github.com/akshita412/todo_cli_app
-```
+Passed a three-lens review (Vik + Tara + Pierrot). **Public install verified end-to-end:** `uv tool install git+https://github.com/akshita412/todo_cli_app` produces a working `todo`. `pyproject.toml` is kept PyPI-publish-ready as a one-step future option.
 
-- **Wave 1 — Packaging metadata ✅** — real MIT `LICENSE` (replaced a placeholder stub) + `pyproject.toml` metadata (license, authors, readme, classifiers, keywords, project URLs). `uv build` and `uv tool install .` verified clean.
-- **Wave 2 — Verify + README ✅** — both git install paths verified working; README rewritten for GitHub-install with every usage example run-checked against the real CLI.
-- **Wave 3 — Reconcile docs ✅** — PRD M6 updated from "PyPI release" to GitHub-install (acceptance criteria + coverage figures refreshed); this status doc updated.
+---
 
-`pyproject.toml` metadata is kept complete so a PyPI publish stays a one-step option later if it's ever wanted.
+## 🎉 MVP complete — M1 through M6 all shipped
 
-**Remaining to close M6:** open the PR, three-lens review, merge, move the board card to Done.
+All six milestones are merged to `main`. The app is **installed and in daily personal use** (`todo` on PATH at `~/.local/bin/todo`). **72 tests, coverage ~99% (gate ≥95%).** All docs (PRD, code-map, README, project-status) reconciled to match shipped reality.
+
+## What's left — optional post-MVP (none blocking)
+
+- **Project/tag field** — the highest-value next feature. The app is one flat list; the user wants to log tasks per project (e.g. `todo add "…" --project X` + `todo list --project X`). Current workaround in the README: separate lists via `TODO_DATA_PATH` aliases, or tag-in-description + `grep`.
+- **CI install-smoke job** — verify the macOS/Ubuntu acceptance claim (only Linux/WSL2 verifiable locally).
+- **`todo --version` flag** — small nicety for an installed CLI.
 
 ---
 
