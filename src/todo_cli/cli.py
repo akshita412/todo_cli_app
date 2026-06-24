@@ -1,4 +1,4 @@
-# agent-notes: { ctx: "CLI entry point; all five commands wired to service", deps: [factory.py, service.py, exceptions.py, models.py], state: active, last: "sato@2026-06-13" }
+# agent-notes: { ctx: "CLI entry point; 6 commands wired to service + --version", deps: [factory.py, service.py, exceptions.py, models.py], state: active, last: "sato@2026-06-24" }
 import functools
 import sys
 from datetime import date
@@ -86,6 +86,7 @@ def _render_table(tasks: list[Task]) -> None:
 
 
 @click.group()
+@click.version_option(package_name="todo-cli", prog_name="todo")
 def cli() -> None:
     """todo — terminal-native task scheduler."""
 

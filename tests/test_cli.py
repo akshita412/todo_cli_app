@@ -19,6 +19,16 @@ def test_help_exits_cleanly(runner):
     assert "todo" in result.output
 
 
+def test_version_flag_reports_package_version(runner):
+    # `todo --version` should print the installed package version and exit 0,
+    # sourced from package metadata (pyproject) so it stays in sync with releases.
+    from importlib.metadata import version
+
+    result = runner.invoke(cli, ["--version"])
+    assert result.exit_code == 0
+    assert version("todo-cli") in result.output
+
+
 # ── add ───────────────────────────────────────────────────────────────────────
 
 def test_add_persists_and_reports_id(runner):
