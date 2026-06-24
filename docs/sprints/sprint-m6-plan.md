@@ -2,7 +2,7 @@
 
 # Sprint Plan — M6: Share via GitHub install + README
 
-**Status:** In progress (Wave 1 started 2026-06-24)
+**Status:** In progress — Wave 1 ✅, Wave 2 ✅ (done 2026-06-24); Wave 3 pending
 **Milestone goal:** Anyone can install `todo-cli` straight from the GitHub repo in one
 command and get a working `todo`, guided by an accurate README. PyPI stays deferred but
 one step away.
@@ -45,7 +45,14 @@ one step away.
 - **AC:** `uv build` produces a wheel with complete metadata; `uv tool install .` from a
   clean checkout yields a working `todo`.
 
-### Wave 2 — Verify + document (both depend on Wave 1)
+### Wave 2 — Verify + document (both depend on Wave 1)  ← done
+
+Verified install via `uv tool install git+file://…@feat/m6-packaging-metadata` and a
+pip-in-venv proxy for the pipx path (pipx not installed locally) — both produce a working
+`todo` end-to-end. The public `git+https://…` command becomes complete once this branch
+merges to `main` (the metadata isn't on `main` yet). README rewritten; every usage example
+run-verified against the real CLI.
+
 - **Verify clean GitHub install:** install via `uv tool install git+…` and `pipx install git+…`
   into a throwaway env; fix any packaging gaps surfaced.
   **AC:** both paths produce a working `todo` end-to-end.
