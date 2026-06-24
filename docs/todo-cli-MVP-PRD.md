@@ -28,7 +28,7 @@ Existing task management tools fail terminal-native users in one of two ways: th
 ### 3.1 MVP Goals
 
 - Users can add, list, complete, and delete tasks from a single CLI entry point (`todo`).
-- Tasks persist across sessions via a local storage backend (JSON default, SQLite opt-in).
+- Tasks persist across sessions via a local JSON storage backend. (Storage is an abstract interface, so a SQLite backend can be added later — **deferred, not part of the MVP**.)
 - Due dates are validated, stored, and surfaced visually with overdue flagging.
 - The tool installs in one command (`uv tool install git+https://github.com/akshita412/todo_cli_app`, or the equivalent `pipx` command) and requires zero configuration.
 - Output is composable: errors go to stderr, data goes to stdout, exit codes are standard.
@@ -63,7 +63,7 @@ CLI (cli.py)          ← Click commands, output rendering, exit codes
      ↓
 Service (service.py)  ← Pure business logic, validation, status transitions
      ↓
-Storage (storage/)    ← Abstract interface + JSON and SQLite backends
+Storage (storage/)    ← Abstract interface + JSON backend (SQLite deferred)
 ```
 
 ### 5.2 Package Structure
@@ -79,8 +79,7 @@ todo-cli/
 │   └── storage/
 │       ├── __init__.py
 │       ├── base.py      # Abstract StorageBackend interface
-│       ├── json_store.py
-│       └── sqlite_store.py
+│       └── json_store.py # JSON backend (SQLite backend deferred — not built)
 ├── tests/
 │   ├── test_cli.py
 │   ├── test_service.py
@@ -98,7 +97,7 @@ _(See PRD source document for full table)_
 Priority order (highest to lowest):
 
 1. `TODO_DATA_PATH` env var if set (enables pointing at any directory).
-2. Default: `~/.todo/tasks.json` (JSON) or `~/.todo/tasks.db` (SQLite). Directory created on first run.
+2. Default: `~/.todo/tasks.json`. Directory created on first run. (A SQLite path such as `~/.todo/tasks.db` is reserved for the deferred SQLite backend.)
 
 ---
 
@@ -128,7 +127,10 @@ Priority order (highest to lowest):
 }
 ```
 
-### 6.3 SQLite Schema
+### 6.3 SQLite Schema (deferred — post-MVP)
+
+> Not implemented in the MVP. Kept here as design reference for if/when the SQLite
+> backend is added behind the existing `StorageBackend` interface.
 
 ```sql
 CREATE TABLE IF NOT EXISTS tasks (
@@ -203,7 +205,7 @@ All error messages go to stderr. The CLI catches domain exceptions from the serv
 
 ## 9. Testing Strategy
 
-Coverage must reach **≥ 80%** before MVP is shippable.
+Coverage must reach **≥ 95%** before MVP is shippable.
 
 ### 9.1 Unit Tests — Service Layer
 Pure functions, no mocking required. Covers: valid creation, description boundaries, invalid dates, status transitions, overdue detection.
@@ -212,12 +214,12 @@ Pure functions, no mocking required. Covers: valid creation, description boundar
 Use Click's `CliRunner`. Inject temp-file storage. Verify stdout, stderr, and exit codes for happy paths and all error scenarios.
 
 ### 9.3 Storage Tests
-Same suite against both JSON and SQLite backends via `pytest.mark.parametrize`. Covers: write-read round trips, ID uniqueness after deletion.
+Run against the JSON backend. Covers: write-read round trips, ID uniqueness after deletion, corruption handling, and atomic writes. (The suite can be parametrized across backends once SQLite lands.)
 
 ### 9.4 Test Infrastructure
 - **Framework:** pytest + pytest-cov
 - **CI:** GitHub Actions — ubuntu-latest, Python 3.10 + 3.12
-- **Coverage gate:** PRs below 80% are blocked
+- **Coverage gate:** PRs below 95% are blocked
 
 ---
 
@@ -226,7 +228,7 @@ Same suite against both JSON and SQLite backends via `pytest.mark.parametrize`. 
 | Milestone | Scope |
 |-----------|-------|
 | M1 | Scaffold — models, exceptions, storage interface, CI |
-| M2 | Storage backends — JSON (default), SQLite (opt-in) |
+| M2 | Storage backend — JSON (SQLite deferred to post-MVP) |
 | M3 | Service layer — business logic, validation |
 | M4 | CLI commands wired up end-to-end |
 | M5 | Polish + coverage gate (≥ 95%) |
@@ -253,7 +255,7 @@ All items in section 3.2. Not to be implemented in the MVP branch even if they a
 - All commands return correct exit codes for success and error scenarios.
 - `pytest --cov` reports ≥ 95% coverage across the full package.
 - No stack traces visible to the user under normal operation.
-- Tasks persist across terminal restarts on both JSON and SQLite backends.
+- Tasks persist across terminal restarts via the JSON backend.
 - CI passes on Python 3.10 and 3.12.
 
 ---
