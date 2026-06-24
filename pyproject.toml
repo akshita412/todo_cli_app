@@ -6,17 +6,47 @@ build-backend = "hatchling.build"
 name = "todo-cli"
 version = "0.1.0"
 description = "A Python CLI task scheduling app for terminal-native users"
+readme = "README.md"
 requires-python = ">=3.10"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [
+    { name = "akshita412", email = "akshita.srivastava@gmail.com" },
+]
+keywords = ["todo", "cli", "task", "productivity", "terminal"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Utilities",
+]
 dependencies = [
     "click>=8.1",
     "rich>=13.0",
 ]
+
+[project.urls]
+Homepage = "https://github.com/akshita412/todo_cli_app"
+Repository = "https://github.com/akshita412/todo_cli_app"
+Issues = "https://github.com/akshita412/todo_cli_app/issues"
 
 [project.scripts]
 todo = "todo_cli.cli:cli"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/todo_cli"]
+
+[tool.hatch.build.targets.sdist]
+# Keep the source distribution to what a package actually needs. Without this,
+# hatchling bundles the whole repo (docs/, .claude/ agent scaffold, scripts/,
+# and even gitignored local files) into the tarball — so a future PyPI publish
+# stays a *clean* one-step operation.
+include = ["src/todo_cli", "tests", "/README.md", "/LICENSE", "/pyproject.toml"]
 
 [tool.pytest.ini_options]
 # Coverage gate (M5): fail the suite if total coverage drops below 95%.

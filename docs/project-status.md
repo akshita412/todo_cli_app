@@ -79,7 +79,7 @@ SQLite stayed **deferred** (JSON is plenty for sharing with a few people). Two w
 
 **Test count: 70 tests, all passing. Coverage 93% (gate ≥80%).**
 
-**Deferred follow-ups (tracked):** atomic writes #15 · remove dead `commands/tasks.py` stub #16.
+**Deferred follow-ups:** atomic writes #15 ✅ (merged, PR #20 — temp-file + `fsync` + `os.replace`, so a torn write can't destroy `tasks.json`) · remove dead `commands/tasks.py` stub #16 ✅ (merged; coverage gate raised to ≥95%). Suite now 72 tests, coverage ~99%.
 
 ## Tooling set up
 - `log-session` — logs each session summary to Notion. Now push-only: Claude Code writes the entry on the Pro subscription and the tool pushes it (`NOTION_TOKEN` only, no Anthropic API key needed)
@@ -90,15 +90,20 @@ SQLite stayed **deferred** (JSON is plenty for sharing with a few people). Two w
 
 ## What's left
 
-### M6 — Share it (install from GitHub) ← next
-- No PyPI release. Distribute straight from the GitHub repo.
-- Anyone interested installs with one command:
-  ```bash
-  uv tool install git+https://github.com/akshita412/todo_cli_app
-  # or: pipx install git+https://github.com/akshita412/todo_cli_app
-  ```
-- README with install + usage instructions for these users.
-- Keep `pyproject.toml` tidy so a PyPI publish stays a one-step option later if it's ever wanted.
+### M6 — Share it (install from GitHub) 🚧 in progress
+No PyPI release — distribute straight from the GitHub repo. Plan + waves in `docs/sprints/sprint-m6-plan.md`. Anyone interested installs with one command:
+```bash
+uv tool install git+https://github.com/akshita412/todo_cli_app
+# or: pipx install git+https://github.com/akshita412/todo_cli_app
+```
+
+- **Wave 1 — Packaging metadata ✅** — real MIT `LICENSE` (replaced a placeholder stub) + `pyproject.toml` metadata (license, authors, readme, classifiers, keywords, project URLs). `uv build` and `uv tool install .` verified clean.
+- **Wave 2 — Verify + README ✅** — both git install paths verified working; README rewritten for GitHub-install with every usage example run-checked against the real CLI.
+- **Wave 3 — Reconcile docs ✅** — PRD M6 updated from "PyPI release" to GitHub-install (acceptance criteria + coverage figures refreshed); this status doc updated.
+
+`pyproject.toml` metadata is kept complete so a PyPI publish stays a one-step option later if it's ever wanted.
+
+**Remaining to close M6:** open the PR, three-lens review, merge, move the board card to Done.
 
 ---
 
