@@ -98,15 +98,16 @@ Passed a three-lens review (Vik + Tara + Pierrot). **Public install verified end
 
 ---
 
-## 🎉 MVP complete — M1 through M6 all shipped
+## 🎉 MVP complete — M1 through M6 all shipped, released as v0.1.0
 
-All six milestones are merged to `main`. The app is **installed and in daily personal use** (`todo` on PATH at `~/.local/bin/todo`). **72 tests, coverage ~99% (gate ≥95%).** All docs (PRD, code-map, README, project-status) reconciled to match shipped reality.
+All six milestones are merged to `main`. The app is **installed and in daily personal use** (`todo` on PATH at `~/.local/bin/todo`). **73 tests, coverage ~99% (gate ≥95%).** All docs (PRD, code-map, README, project-status) reconciled to match shipped reality.
+
+**Released:** [v0.1.0 — MVP](https://github.com/akshita412/todo_cli_app/releases/tag/v0.1.0) tagged at `545fcc5` (marked Latest). Version-pinned install: `uv tool install git+https://github.com/akshita412/todo_cli_app@v0.1.0`. The repo now reads as shipped — About panel has a description + topics (python, cli, click, todo, task-manager, terminal), and `todo --version` reports the package version (PR #26).
 
 ## What's left — optional post-MVP (none blocking)
 
 - **Project/tag field** — the highest-value next feature. The app is one flat list; the user wants to log tasks per project (e.g. `todo add "…" --project X` + `todo list --project X`). Current workaround in the README: separate lists via `TODO_DATA_PATH` aliases, or tag-in-description + `grep`.
 - **CI install-smoke job** — verify the macOS/Ubuntu acceptance claim (only Linux/WSL2 verifiable locally).
-- **`todo --version` flag** — small nicety for an installed CLI.
 
 ---
 
