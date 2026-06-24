@@ -41,6 +41,13 @@ todo = "todo_cli.cli:cli"
 [tool.hatch.build.targets.wheel]
 packages = ["src/todo_cli"]
 
+[tool.hatch.build.targets.sdist]
+# Keep the source distribution to what a package actually needs. Without this,
+# hatchling bundles the whole repo (docs/, .claude/ agent scaffold, scripts/,
+# and even gitignored local files) into the tarball — so a future PyPI publish
+# stays a *clean* one-step operation.
+include = ["src/todo_cli", "tests", "/README.md", "/LICENSE", "/pyproject.toml"]
+
 [tool.pytest.ini_options]
 # Coverage gate (M5): fail the suite if total coverage drops below 95%.
 # Centralized here so both local `uv run pytest` and CI enforce one threshold.
