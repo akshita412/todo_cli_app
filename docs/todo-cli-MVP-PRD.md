@@ -19,7 +19,7 @@ The product is scoped deliberately narrow: no accounts, no cloud sync, no notifi
 
 Existing task management tools fail terminal-native users in one of two ways: they are too heavyweight (Notion, Linear, Jira require browser context-switching and account management) or too ephemeral (plain text files, ad hoc `echo` commands, and sticky notes carry no structure and do not surface overdue items). There is no widely-adopted, installable Python CLI tool that is structured, persistent, overdue-aware, and composable with shell pipelines.
 
-`todo-cli` closes this gap with a single pip-installable package that stores tasks locally, renders a clean table, and flags overdue items — all without leaving the terminal.
+`todo-cli` closes this gap with a single installable Python package that stores tasks locally, renders a clean table, and flags overdue items — all without leaving the terminal.
 
 ---
 
@@ -30,7 +30,7 @@ Existing task management tools fail terminal-native users in one of two ways: th
 - Users can add, list, complete, and delete tasks from a single CLI entry point (`todo`).
 - Tasks persist across sessions via a local storage backend (JSON default, SQLite opt-in).
 - Due dates are validated, stored, and surfaced visually with overdue flagging.
-- The tool installs in one command (`pip install todo-cli`) and requires zero configuration.
+- The tool installs in one command (`uv tool install git+https://github.com/akshita412/todo_cli_app`, or the equivalent `pipx` command) and requires zero configuration.
 - Output is composable: errors go to stderr, data goes to stdout, exit codes are standard.
 - The codebase is layered (CLI → Service → Storage) so any layer is replaceable post-MVP.
 
@@ -229,8 +229,13 @@ Same suite against both JSON and SQLite backends via `pytest.mark.parametrize`. 
 | M2 | Storage backends — JSON (default), SQLite (opt-in) |
 | M3 | Service layer — business logic, validation |
 | M4 | CLI commands wired up end-to-end |
-| M5 | Polish + coverage gate (≥ 80%) |
-| M6 | PyPI release |
+| M5 | Polish + coverage gate (≥ 95%) |
+| M6 | Distribution — GitHub install (`uv tool` / `pipx`) + README |
+
+> **Distribution note:** M6 ships via direct GitHub install rather than a PyPI release.
+> JSON-only local storage is plenty for sharing with a handful of users, and GitHub install
+> avoids the overhead of a published package. `pyproject.toml` metadata is kept complete so a
+> PyPI publish remains a one-step, post-MVP option if it's ever wanted.
 
 ---
 
@@ -242,11 +247,11 @@ All items in section 3.2. Not to be implemented in the MVP branch even if they a
 
 ## 12. Acceptance Criteria
 
-- `pip install todo-cli` completes on a clean Python 3.10+ environment (macOS, Ubuntu 22.04, WSL2).
+- `uv tool install git+https://github.com/akshita412/todo_cli_app` (or the `pipx` equivalent) installs a working `todo` on a clean Python 3.10+ environment (macOS, Ubuntu 22.04, WSL2).
 - A user can add five tasks, list them, complete two, delete one — in under two minutes — using only `--help`.
 - `todo list` renders a correctly formatted table with overdue highlighting and summary footer.
 - All commands return correct exit codes for success and error scenarios.
-- `pytest --cov` reports ≥ 80% coverage across the full package.
+- `pytest --cov` reports ≥ 95% coverage across the full package.
 - No stack traces visible to the user under normal operation.
 - Tasks persist across terminal restarts on both JSON and SQLite backends.
 - CI passes on Python 3.10 and 3.12.

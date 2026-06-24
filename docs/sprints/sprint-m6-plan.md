@@ -2,7 +2,7 @@
 
 # Sprint Plan — M6: Share via GitHub install + README
 
-**Status:** In progress — Wave 1 ✅, Wave 2 ✅ (done 2026-06-24); Wave 3 pending
+**Status:** All waves complete (2026-06-24) — Wave 1 ✅, Wave 2 ✅, Wave 3 ✅. Remaining to close M6: PR → review → merge → board.
 **Milestone goal:** Anyone can install `todo-cli` straight from the GitHub repo in one
 command and get a working `todo`, guided by an accurate README. PyPI stays deferred but
 one step away.
@@ -60,7 +60,7 @@ run-verified against the real CLI.
   CLI; correct the `complete` wording; drop "SQLite" from the stack line.
   **AC:** copy-paste install works; examples match real output.
 
-### Wave 3 — Reconcile docs
+### Wave 3 — Reconcile docs  ← done
 - Update PRD M6 ("PyPI release" → "Share via GitHub install + README") and its acceptance
   criterion (`pip install todo-cli` → `uv tool install git+…`); note PyPI as post-MVP.
 - Update `project-status.md` as M6 lands.
