@@ -1,6 +1,8 @@
-# agent-notes: ctx="JSON file storage backend" deps=["storage/base.py","models.py"] state=active last="sato@2026-06-23"
+# agent-notes: ctx="JSON file storage backend" deps=["storage/base.py","models.py"] state=active last="sato@2026-06-24"
 
 import json
+import os
+import tempfile
 from dataclasses import asdict
 from datetime import date, datetime
 from pathlib import Path
@@ -46,10 +48,25 @@ class JsonStorageBackend(StorageBackend):
         return data
 
     def _save(self, data: dict) -> None:
+        # Atomic write: serialize into a temp file in the same directory, flush it
+        # to disk, then os.replace() it over the destination. A torn or failed
+        # write touches only the temp file — the prior good tasks.json survives.
+        tmp_name = None
         try:
-            with self._path.open("w") as f:
+            tmp_fd, tmp_name = tempfile.mkstemp(
+                dir=self._path.parent, prefix=".tasks-", suffix=".tmp"
+            )
+            with os.fdopen(tmp_fd, "w") as f:
                 json.dump(data, f, indent=2, default=str)
+                f.flush()
+                os.fsync(f.fileno())
+            os.replace(tmp_name, self._path)
         except OSError as exc:
+            if tmp_name is not None:
+                try:
+                    os.unlink(tmp_name)
+                except OSError:
+                    pass
             raise StorageAccessError(
                 f"Cannot access task file: {self._path}"
             ) from exc
