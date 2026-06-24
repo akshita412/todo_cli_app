@@ -238,6 +238,14 @@ def test_failed_write_preserves_existing_file(store, tmp_path, monkeypatch):
     # And the file itself must not have been left empty/truncated.
     assert (tmp_path / "tasks.json").read_text().strip() != ""
 
+    # The half-written record must not have partially landed.
+    assert fresh.get(2) is None
+
+    # The atomic write's scratch temp file must have been cleaned up on failure —
+    # a leftover `.tasks-*.tmp` would hold full task data. Only the canonical file
+    # may remain.
+    assert sorted(p.name for p in tmp_path.iterdir()) == ["tasks.json"]
+
 
 def test_successful_write_leaves_no_temp_files(store, tmp_path):
     store.add(Task(description="Buy milk", status=Status.PENDING))

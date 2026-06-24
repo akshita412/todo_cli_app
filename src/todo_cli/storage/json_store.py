@@ -51,6 +51,9 @@ class JsonStorageBackend(StorageBackend):
         # Atomic write: serialize into a temp file in the same directory, flush it
         # to disk, then os.replace() it over the destination. A torn or failed
         # write touches only the temp file — the prior good tasks.json survives.
+        # Note: mkstemp creates the temp at 0600 and os.replace preserves that
+        # mode, so tasks.json ends up owner-only (was 0644 under the old in-place
+        # open). This is intentional — task descriptions shouldn't be world-readable.
         tmp_name = None
         try:
             tmp_fd, tmp_name = tempfile.mkstemp(
