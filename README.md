@@ -18,6 +18,7 @@ pipx install git+https://github.com/akshita412/todo_cli_app
 Verify it worked:
 
 ```bash
+todo --version   # prints e.g. "todo, version 0.1.0"
 todo --help
 ```
 
