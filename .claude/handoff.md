@@ -2,7 +2,9 @@
 
 **Date:** 2026-06-24
 **Branch:** `main` (all work merged; no open branches)
-**Status:** 🎉 **MVP COMPLETE — M1 through M6 all shipped and merged.**
+**Status:** 🎉 **MVP COMPLETE — M1 through M6 all shipped and merged. Released as v0.1.0.**
+
+**Release:** [v0.1.0 — MVP](https://github.com/akshita412/todo_cli_app/releases/tag/v0.1.0) tagged at `545fcc5` (Latest). Repo About panel filled (description + topics: python, cli, click, todo, task-manager, terminal). `todo --version` reports the package version. Pinned install: `...@v0.1.0`.
 
 ---
 
@@ -20,7 +22,7 @@ The app is **done, installed, and in daily personal use.** `todo` is on PATH at
 | Packaging + GitHub-install distribution | ✅ |
 | Docs (PRD, code-map, README, project-status) reconciled to reality | ✅ |
 
-**72 tests passing, coverage ~99% (gate ≥95%).** Data lives in `~/.todo/tasks.json`
+**73 tests passing, coverage ~99% (gate ≥95%).** Data lives in `~/.todo/tasks.json`
 (override with `TODO_DATA_PATH`).
 
 ## Milestone tracker
@@ -58,7 +60,8 @@ Board: all six cards show **Done**.
    `grep`). See [[mvp-status]] memory.
 2. **CI install-smoke job** — cover the macOS/Ubuntu acceptance claim (only Linux/WSL2
    verifiable locally).
-3. **`todo --version` flag** — small nicety for an installed CLI.
+
+(`todo --version` — done in the 2026-06-24 release session, PR #26.)
 
 If pursuing #1, follow the Session Entry Protocol: create the work item, run the
 Architecture Gate (a new `--project` field touches model + storage + service + CLI), then
